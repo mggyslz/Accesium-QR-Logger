@@ -64,12 +64,22 @@ def inject_csrf_helpers():
 
 @app.before_request
 def force_https():
+    # Skip HTTPS force in local dev
     if request.host.startswith(('localhost', '127.0.0.1')):
         return None
-    if request.blueprint in ['scanner', 'sse']:  # Allow SSE in HTTP for local dev
+    
+    # Railway sets X-Forwarded-Proto correctly
+    forwarded_proto = request.headers.get('X-Forwarded-Proto', 'http')
+
+    # Allow scanner/SSE in HTTP for local dev + avoid breaking them
+    if request.blueprint in ['scanner', 'sse']:
         return None
-    if not request.is_secure and request.headers.get('X-Forwarded-Proto', 'http') != 'https':
-        return redirect(request.url.replace('http://', 'https://', 1), code=301)
+
+    # IF NOT HTTPS in real deployment → redirect
+    if forwarded_proto != 'https':
+        secure_url = request.url.replace('http://', 'https://', 1)
+        return redirect(secure_url, code=301)
+
 
 @app.after_request
 def set_security_headers(response):
@@ -223,7 +233,8 @@ def unauthorized(e):
     return render_template('error.html', error_title='Unauthorized', error_message='Please log in.', error_code=401), 401
 
 
-if __name__ == "__main__":
-    # Production (Railway/Render) auto-handles HTTPS
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
