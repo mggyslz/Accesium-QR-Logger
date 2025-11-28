@@ -24,6 +24,7 @@ def get_conn():
     Return a sqlite3 Connection. Caller must close it.
     """
     try:
+        print(" DEBUG — USING DATABASE PATH:", DB_PATH)  # ADD THIS
         conn = sqlite3.connect(DB_PATH)
         conn.execute("PRAGMA foreign_keys = ON;")
         return conn
@@ -31,6 +32,7 @@ def get_conn():
         from core.error_utils import log_error
         log_error(e, "Opening database connection")
         raise
+
 
 def get_utc_now():
     """Get current time in UTC as string."""
