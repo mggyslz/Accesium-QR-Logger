@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/assets/favicon.ico') }}" />
+    <title>Accesium Developer Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+            color: white;
+            padding: 2.5rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem auto;
+        }
+
+        .sidebar {
+            flex: 0 0 250px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #2c2c2c;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar a {
+            color: #666;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar a:hover {
+            color: #2c2c2c;
+            background: #f5f5f5;
+        }
+
+        .sidebar a.active {
+            color: #2c2c2c;
+            background: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .content {
+            flex: 1;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: #2c2c2c;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c2c2c;
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            color: #333;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section h4 {
+            font-size: 1.1rem;
+            color: #444;
+            margin: 1.25rem 0 0.75rem;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid #e5e5e5;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-python {
+            background: #3776ab;
+            color: white;
+        }
+
+        .badge-flask {
+            background: #000000;
+            color: white;
+        }
+
+        .badge-sqlite {
+            background: #003b57;
+            color: white;
+        }
+
+        .badge-frontend {
+            background: #e34c26;
+            color: white;
+        }
+
+        ul,
+        ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        ul li,
+        ol li {
+            margin: 0.5rem 0;
+        }
+
+        .footer {
+            background: #2c2c2c;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .diagram-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 1px solid #e5e5e5;
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-tree {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            border-left: 4px solid #2c2c2c;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .file-tree pre {
+            margin: 0;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: static;
+                max-height: none;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 1.5rem;
+            }
+
+            .section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Accesium Developer Documentation</h1>
+            <p>Technical Reference & API Guide</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>Documentation</h3>
+                <ul>
+                    <li><a href="#overview" class="active">System Overview</a></li>
+                    <li><a href="#architecture">Architecture</a></li>
+                    <li><a href="#database">Database Schema</a></li>
+                    <li><a href="#setup">Installation & Setup</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                    <li><a href="#core-modules">Core Modules</a></li>
+                    <li><a href="#api-routes">API Routes</a></li>
+                    <li><a href="#security">Security Implementation</a></li>
+                    <li><a href="#authentication">Authentication Flow</a></li>
+                    <li><a href="#deployment">Deployment</a></li>
+                    <li><a href="#extending">Extending the System</a></li>
+                </ul>
+            </div>
+
+            <div class="content">
+                <!-- OVERVIEW -->
+                <div class="section" id="overview">
+                    <h2>System Overview</h2>
+
+                    <p>Accesium is a Flask-based QR code access control system built with Python 3.8+. It provides
+                        comprehensive user management, access logging, real-time analytics, and security features for
+                        facility access control.</p>
+
+                    <h3>Technology Stack</h3>
+                    <table>
+                        <tr>
+                            <th>Component</th>
+                            <th>Technology</th>
+                            <th>Version</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-python">Backend</span></td>
+                            <td>Python Flask</td>
+                            <td>3.8+</td>
+                            <td>Web framework and API server</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-sqlite">Database</span></td>
+                            <td>SQLite3</td>
+                            <td>3.x</td>
+                            <td>Relational data storage</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-frontend">Frontend</span></td>
+                            <td>HTML5, CSS3, JavaScript</td>
+                            <td>ES6+</td>
+                            <td>User interface and interactions</td>
+                        </tr>
+                        <tr>
+                            <td>QR Generation</td>
+                            <td>qrcode, Pillow</td>
+                            <td>Latest</td>
+                            <td>QR code generation and image processing</td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td>SMTP (smtplib)</td>
+                            <td>Built-in</td>
+                            <td>Email notifications and 2FA</td>
+                        </tr>
+                        <tr>
+                            <td>Security</td>
+                            <td>hashlib, secrets</td>
+                            <td>Built-in</td>
+                            <td>Password hashing and token generation</td>
+                        </tr>
+                    </table>
+
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>Role-based access control (Admin/User)</li>
+                        <li>QR code generation and scanning with PIN verification</li>
+                        <li>Two-factor authentication (2FA) with trusted device management</li>
+                        <li>Real-time attendance tracking and analytics</li>
+                        <li>Location-based access rules (whitelist/blacklist)</li>
+                        <li>Comprehensive security features (CSRF, rate limiting, session management)</li>
+                        <li>Email notifications and alerts</li>
+                        <li>Data export (Excel/CSV)</li>
+                        <li>Dark mode support</li>
+                    </ul>
+                </div>
+
+                <!-- ARCHITECTURE -->
+                <div class="section" id="architecture">
+                    <h2>System Architecture</h2>
+
+                    <h3>Project Structure</h3>
+                    <div class="file-tree">
+                        <pre>
+Accesium/
+├── app.py                      # Main Flask application entry point
+├── .env                        # Environment variables (not in version control)
+├── .env.example                # Template for environment variables
+├── cert.pem / key.pem          # SSL certificates for HTTPS
+│
+├── apps/                       # Application routes/blueprints
+│   ├── __init__.py
+│   ├── routes_admin.py         # Admin dashboard and management routes
+│   ├── routes_auth.py          # Admin authentication routes
+│   ├── routes_scanner.py       # QR scanner interface routes
+│   ├── routes_sse.py           # Server-Sent Events routes
+│   └── routes_user.py          # User dashboard and profile routes
+│
+├── config/
+│   └── settings.py             # Application configuration and constants
+│
+├── core/                       # Core business logic modules
+│   ├── __init__.py
+│   ├── access_control.py       # Access rules and permissions logic
+│   ├── auth_decorators.py      # Login required decorators and session management
+│   ├── csrf_utils.py           # CSRF token generation and validation
+│   ├── database.py             # Database connection and query functions
+│   ├── email_utils.py          # Email sending and template rendering
+│   ├── error_utils.py          # Error logging and handling
+│   ├── init_db.py              # Database initialization script
+│   ├── notification_utils.py   # In-app notification system
+│   ├── qr_utils.py             # QR code generation and validation
+│   ├── security.py             # Password hashing, PIN verification, salting
+│   ├── settings_manager.py     # System settings CRUD operations
+│   ├── trusted_device_utils.py # Trusted device management for 2FA bypass
+│   └── validation.py           # Input validation and sanitization
+│
+├── data/
+│   └── security_app.db         # SQLite database file
+│
+├── static/                     # Static assets
+│   ├── assets/
+│   │   ├── favicon.ico
+│   │   └── ERD.png
+│   ├── css/
+│   │   └── global.css          # Global styles
+│   ├── exports/                # Generated export files (CSV/Excel)
+│   ├── img/
+│   │   └── no_qr.png
+│   ├── js/                     # Client-side JavaScript
+│   │   ├── admin.js
+│   │   ├── admin_verify_2fa.js
+│   │   ├── scanner.js
+│   │   ├── user.js
+│   │   ├── user_login.js
+│   │   └── user_verify_2fa.js
+│   └── qrcodes/                # Generated QR code images
+│
+└── templates/                  # Jinja2 HTML templates
+    ├── about.html
+    ├── admin.html
+    ├── admin_login.html
+    ├── admin_signup.html
+    ├── admin_verify_2fa.html
+    ├── documentation.html
+    ├── developer_docs.html
+    ├── rate_limit.html
+    ├── error.html
+    ├── landing.html
+    ├── scanner.html
+    ├── user.html
+    ├── user_login.html
+    └── user_verify_2fa.html
+                        </pre>
+                    </div>
+
+                    <h3>Application Flow</h3>
+                    <div class="code-block">
+                        <pre>
+Request Flow:
+1. Client → Flask Application (app.py)
+2. Route Handler (apps/routes_*.py)
+3. Authentication Check (auth_decorators.py)
+4. CSRF Validation (csrf_utils.py)
+5. Input Validation (validation.py)
+6. Business Logic (core/*.py)
+7. Database Operations (database.py)
+8. Response Generation (templates/*.html)
+9. Response → Client
+</pre>
+                    </div>
+                </div>
+
+                <!-- DATABASE SCHEMA -->
+                <div class="section" id="database">
+                    <h2>Database Schema</h2>
+
+                    <div class="diagram-container">
+                        <h3>Entity Relationship Diagram</h3>
+                        <img src="{{ url_for('static', filename='assets/ERD.png') }}"
+                            alt="Database ERD"
+                            style="max-width: 100%; border: 2px solid #e5e5e5;">
+
+                        <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                            The database uses SQLite with foreign key constraints and triggers for referential integrity
+                        </p>
+                    </div>
+
+                    <h3>Core Tables</h3>
+
+                    <h4>admins</h4>
+                    <p>Stores administrator accounts with authentication credentials</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Constraints</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>admin_id</td>
+                            <td>INTEGER</td>
+                            <td>PRIMARY KEY</td>
+                            <td>Auto-incrementing admin identifier</td>
+                        </tr>
+                        <tr>
+                            <td>username</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>Admin username for login</td>
+                        </tr>
+                        <tr>
+                            <td>email</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>Admin email address</td>
+                        </tr>
+                        <tr>
+                            <td>name</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>Admin full name</td>
+                        </tr>
+                        <tr>
+                            <td>pass_hash</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>SHA-256 password hash</td>
+                        </tr>
+                        <tr>
+                            <td>pass_salt</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>Unique salt for password hashing</td>
+                        </tr>
+                        <tr>
+                            <td>email_verified</td>
+                            <td>INTEGER</td>
+                            <td>DEFAULT 0</td>
+                            <td>Email verification status (0/1)</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT CURRENT_TIMESTAMP</td>
+                            <td>Account creation timestamp</td>
+                        </tr>
+                    </table>
+
+                    <h4>users</h4>
+                    <p>Stores regular user accounts with QR codes and access credentials</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Constraints</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>user_id</td>
+                            <td>INTEGER</td>
+                            <td>PRIMARY KEY</td>
+                            <td>Auto-incrementing user identifier</td>
+                        </tr>
+                        <tr>
+                            <td>username</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>User login username</td>
+                        </tr>
+                        <tr>
+                            <td>email</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>User email address</td>
+                        </tr>
+                        <tr>
+                            <td>name</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>User full name</td>
+                        </tr>
+                        <tr>
+                            <td>role</td>
+                            <td>TEXT</td>
+                            <td></td>
+                            <td>User role (Staff, Employee, Student, Teacher, Visitor)</td>
+                        </tr>
+                        <tr>
+                            <td>password_hash</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>SHA-256 password hash</td>
+                        </tr>
+                        <tr>
+                            <td>password_salt</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>Unique salt for password hashing</td>
+                        </tr>
+                        <tr>
+                            <td>pin</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL</td>
+                            <td>6-digit PIN for QR scanner verification</td>
+                        </tr>
+                        <tr>
+                            <td>qr_token</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>Unique token encoded in QR code</td>
+                        </tr>
+                        <tr>
+                            <td>qr_code</td>
+                            <td>TEXT</td>
+                            <td>UNIQUE NOT NULL</td>
+                            <td>QR code image filename</td>
+                        </tr>
+                        <tr>
+                            <td>status</td>
+                            <td>TEXT</td>
+                            <td>DEFAULT 'Active'</td>
+                            <td>Account status (Active/Inactive)</td>
+                        </tr>
+                        <tr>
+                            <td>email_verified</td>
+                            <td>INTEGER</td>
+                            <td>DEFAULT 0</td>
+                            <td>Email verification status</td>
+                        </tr>
+                        <tr>
+                            <td>force_password_change</td>
+                            <td>INTEGER</td>
+                            <td>DEFAULT 0</td>
+                            <td>Requires password change on next login</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT CURRENT_TIMESTAMP</td>
+                            <td>Account creation timestamp</td>
+                        </tr>
+                    </table>
+
+                    <h4>access_logs</h4>
+                    <p>Records all entry/exit events with timestamps and locations</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Constraints</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>log_id</td>
+                            <td>INTEGER</td>
+                            <td>PRIMARY KEY</td>
+                            <td>Auto-incrementing log identifier</td>
+                        </tr>
+                        <tr>
+                            <td>user_id</td>
+                            <td>INTEGER</td>
+                            <td>NOT NULL, FOREIGN KEY</td>
+                            <td>References users.user_id (CASCADE on DELETE)</td>
+                        </tr>
+                        <tr>
+                            <td>action</td>
+                            <td>TEXT</td>
+                            <td>NOT NULL, CHECK ('IN'/'OUT')</td>
+                            <td>Entry or exit action</td>
+                        </tr>
+                        <tr>
+                            <td>location</td>
+                            <td>TEXT</td>
+                            <td>DEFAULT 'Gate'</td>
+                            <td>Scanning location name</td>
+                        </tr>
+                        <tr>
+                            <td>timestamp</td>
+                            <td>TIMESTAMP</td>
+                            <td>DEFAULT CURRENT_TIMESTAMP</td>
+                            <td>UTC timestamp of scan</td>
+                        </tr>
+                    </table>
+
+                    <h4>verification_codes</h4>
+                    <p>Stores 2FA codes and email verification codes</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>code_id</td>
+                            <td>INTEGER</td>
+                            <td>Primary key</td>
+                        </tr>
+                        <tr>
+                            <td>user_type</td>
+                            <td>TEXT</td>
+                            <td>'admin' or 'user'</td>
+                        </tr>
+                        <tr>
+                            <td>user_id</td>
+                            <td>INTEGER</td>
+                            <td>References admin_id or user_id</td>
+                        </tr>
+                        <tr>
+                            <td>email</td>
+                            <td>TEXT</td>
+                            <td>Email address</td>
+                        </tr>
+                        <tr>
+                            <td>code</td>
+                            <td>TEXT</td>
+                            <td>6-digit verification code</td>
+                        </tr>
+                        <tr>
+                            <td>purpose</td>
+                            <td>TEXT</td>
+                            <td>'login', 'email_verify', 'password_reset'</td>
+                        </tr>
+                        <tr>
+                            <td>expires_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>Expiration time (10 minutes from creation)</td>
+                        </tr>
+                        <tr>
+                            <td>used</td>
+                            <td>INTEGER</td>
+                            <td>0 = unused, 1 = used</td>
+                        </tr>
+                    </table>
+
+                    <h4>trusted_devices</h4>
+                    <p>Stores trusted devices that can bypass 2FA for 30 days</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>device_id</td>
+                            <td>INTEGER</td>
+                            <td>Primary key</td>
+                        </tr>
+                        <tr>
+                            <td>user_type</td>
+                            <td>TEXT</td>
+                            <td>'admin' or 'user'</td>
+                        </tr>
+                        <tr>
+                            <td>user_id</td>
+                            <td>INTEGER</td>
+                            <td>References admin_id or user_id</td>
+                        </tr>
+                        <tr>
+                            <td>device_token</td>
+                            <td>TEXT</td>
+                            <td>Unique device identifier token</td>
+                        </tr>
+                        <tr>
+                            <td>device_name</td>
+                            <td>TEXT</td>
+                            <td>Browser/OS identifier</td>
+                        </tr>
+                        <tr>
+                            <td>ip_address</td>
+                            <td>TEXT</td>
+                            <td>IP address at time of trust</td>
+                        </tr>
+                        <tr>
+                            <td>user_agent</td>
+                            <td>TEXT</td>
+                            <td>Full user agent string</td>
+                        </tr>
+                        <tr>
+                            <td>expires_at</td>
+                            <td>TIMESTAMP</td>
+                            <td>30 days from creation</td>
+                        </tr>
+                    </table>
+
+                    <h4>access_rules</h4>
+                    <p>Defines location/time-based access permissions</p>
+                    <table>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>rule_id</td>
+                            <td>INTEGER</td>
+                            <td>Primary key</td>
+                        </tr>
+                        <tr>
+                            <td>user_id</td>
+                            <td>INTEGER</td>
+                            <td>References users.user_id (CASCADE on DELETE)</td>
+                        </tr>
+                        <tr>
+                            <td>rule_type</td>
+                            <td>TEXT</td>
+                            <td>'whitelist' or 'blacklist'</td>
+                        </tr>
+                        <tr>
+                            <td>location</td>
+                            <td>TEXT</td>
+                            <td>Specific location or NULL for all</td>
+                        </tr>
+                        <tr>
+                            <td>time_from</td>
+                            <td>TEXT</td>
+                            <td>Start time (HH:MM format)</td>
+                        </tr>
+                        <tr>
+                            <td>time_to</td>
+                            <td>TEXT</td>
+                            <td>End time (HH:MM format)</td>
+                        </tr>
+                        <tr>
+                            <td>date_from</td>
+                            <td>TEXT</td>
+                            <td>Start date (YYYY-MM-DD)</td>
+                        </tr>
+                        <tr>
+                            <td>date_to</td>
+                            <td>TEXT</td>
+                            <td>End date (YYYY-MM-DD)</td>
+                        </tr>
+                        <tr>
+                            <td>specific_dates</td>
+                            <td>TEXT</td>
+                            <td>Comma-separated list of dates</td>
+                        </tr>
+                        <tr>
+                            <td>enabled</td>
+                            <td>INTEGER</td>
+                            <td>Rule active status (0/1)</td>
+                        </tr>
+                    </table>
+
+                    <h3>Database Triggers</h3>
+                    <p>The system implements several triggers to maintain referential integrity:</p>
+                    <ul>
+                        <li><strong>delete_admin_verification_codes:</strong> Removes verification codes when admin is
+                            deleted</li>
+                        <li><strong>delete_user_verification_codes:</strong> Removes verification codes when user is
+                            deleted</li>
+                        <li><strong>delete_admin_trusted_devices:</strong> Removes trusted devices when admin is deleted
+                        </li>
+                        <li><strong>delete_user_trusted_devices:</strong> Removes trusted devices when user is deleted
+                        </li>
+                        <li><strong>delete_user_access_rules:</strong> Removes access rules when user is deleted</li>
+                        <li><strong>cleanup_expired_verification_codes:</strong> Automatically removes expired
+                            verification codes</li>
+                        <li><strong>cleanup_expired_trusted_devices:</strong> Automatically removes expired trusted
+                            devices</li>
+                    </ul>
+
+                    <h3>Indexes</h3>
+                    <p>Optimized indexes for better query performance:</p>
+                    <ul>
+                        <li><code>idx_access_logs_user_id</code> - Faster user log lookups</li>
+                        <li><code>idx_access_logs_timestamp</code> - Faster time-based queries</li>
+                        <li><code>idx_verification_codes_email</code> - Faster code verification</li>
+                        <li><code>idx_verification_codes_expires</code> - Efficient cleanup operations</li>
+                        <li><code>idx_trusted_devices_token</code> - Fast device token lookups</li>
+                    </ul>
+                </div>
+
+                <!-- SETUP & INSTALLATION -->
+                <div class="section" id="setup">
+                    <h2>Installation & Setup</h2>
+
+                    <h3>Prerequisites</h3>
+                    <ul>
+                        <li>Python 3.8 or higher</li>
+                        <li>pip (Python package manager)</li>
+                        <li>SQLite3 (included with Python)</li>
+                        <li>Modern web browser with JavaScript support</li>
+                    </ul>
+
+                    <h3>Quick Start</h3>
+                    <div class="code-block">
+                        <pre>
+# Clone or download the project files
+git clone &lt;repository-url&gt;
+cd Accesium
+
+# Create virtual environment (recommended)
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Initialize the database
+python -c "from core.init_db import init_database; init_database()"
+
+# Start the application
+python app.py
+</pre>
+                    </div>
+
+                    <h3>Manual Installation</h3>
+                    <div class="code-block">
+                        <pre>
+# Install required packages individually
+pip install flask==2.3.3
+pip install qrcode==7.4.2
+pip install pillow==10.0.0
+pip install openpyxl==3.1.2
+
+# Generate SSL certificates for HTTPS (optional but recommended)
+openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365
+</pre>
+                    </div>
+                </div>
+
+                <!-- CONFIGURATION -->
+                <div class="section" id="configuration">
+                    <h2>Configuration</h2>
+
+                    <h3>Environment Variables</h3>
+                    <p>Create a <code>.env</code> file in the project root with the following variables:</p>
+                    <table>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Required</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>SECRET_KEY</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>Flask secret key for session security</td>
+                        </tr>
+                        <tr>
+                            <td>SMTP_SERVER</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>SMTP server for email notifications</td>
+                        </tr>
+                        <tr>
+                            <td>SMTP_PORT</td>
+                            <td>Yes</td>
+                            <td>587</td>
+                            <td>SMTP server port</td>
+                        </tr>
+                        <tr>
+                            <td>SMTP_USERNAME</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>SMTP authentication username</td>
+                        </tr>
+                        <tr>
+                            <td>SMTP_PASSWORD</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>SMTP authentication password</td>
+                        </tr>
+                        <tr>
+                            <td>FROM_EMAIL</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>Sender email address for notifications</td>
+                        </tr>
+                        <tr>
+                            <td>APP_ENV</td>
+                            <td>No</td>
+                            <td>development</td>
+                            <td>Environment (development/production)</td>
+                        </tr>
+                        <tr>
+                            <td>DB_PATH</td>
+                            <td>No</td>
+                            <td>data/security_app.db</td>
+                            <td>SQLite database file path</td>
+                        </tr>
+                        <tr>
+                            <td>QR_CODE_DIR</td>
+                            <td>No</td>
+                            <td>static/qrcodes</td>
+                            <td>QR code image storage directory</td>
+                        </tr>
+                    </table>
+
+                    <h3>Application Settings</h3>
+                    <p>Core application settings defined in <code>config/settings.py</code>:</p>
+                    <div class="code-block">
+                        <pre>
+# Security Settings
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_TIME = 900  # 15 minutes in seconds
+SESSION_TIMEOUT = 3600  # 1 hour in seconds
+CSRF_TOKEN_EXPIRY = 3600  # 1 hour in seconds
+
+# QR Code Settings
+QR_TOKEN_LENGTH = 32
+QR_CODE_SIZE = 10
+QR_CODE_BOX_SIZE = 10
+QR_CODE_BORDER = 4
+
+# Verification Settings
+VERIFICATION_CODE_LENGTH = 6
+VERIFICATION_CODE_EXPIRY = 600  # 10 minutes in seconds
+TRUSTED_DEVICE_EXPIRY_DAYS = 30
+
+# Email Settings
+EMAIL_VERIFICATION_REQUIRED = True
+LOGIN_NOTIFICATIONS = True
+
+# Access Control Settings
+DEFAULT_LOCATION = "Gate"
+MAX_PIN_ATTEMPTS = 3
+</pre>
+                    </div>
+
+                    <h3>Database Configuration</h3>
+                    <p>Database connection and initialization settings:</p>
+                    <div class="code-block">
+                        <pre>
+# Database schema version for migrations
+SCHEMA_VERSION = 1
+
+# Foreign key constraints enforcement
+PRAGMA_FOREIGN_KEYS = "ON"
+
+# Database performance settings
+PRAGMA_JOURNAL_MODE = "WAL"
+PRAGMA_CACHE_SIZE = -64000  # 64MB cache
+PRAGMA_SYNCHRONOUS = "NORMAL"
+</pre>
+                    </div>
+                </div>
+
+                <!-- CORE MODULES -->
+                <div class="section" id="core-modules">
+                    <h2>Core Modules</h2>
+
+                    <h3>Authentication & Security</h3>
+                    <h4>security.py</h4>
+                    <p>Handles password hashing, PIN verification, and cryptographic operations.</p>
+                    <div class="code-block">
+                        <pre>
+def hash_password(password, salt=None):
+    """Generate SHA-256 password hash with salt"""
+    pass
+
+def verify_password(password, password_hash, salt):
+    """Verify password against stored hash"""
+    pass
+
+def generate_pin():
+    """Generate random 6-digit PIN"""
+    pass
+
+def verify_pin(input_pin, stored_pin):
+    """Verify PIN with timing attack protection"""
+    pass
+
+def generate_salt():
+    """Generate cryptographically secure random salt"""
+    pass
+</pre>
+                    </div>
+
+                    <h4>auth_decorators.py</h4>
+                    <p>Decorators for route protection and session management.</p>
+                    <div class="code-block">
+                        <pre>
+def admin_login_required(f):
+    """Require admin authentication for route"""
+    pass
+
+def user_login_required(f):
+    """Require user authentication for route"""
+    pass
+
+def check_2fa_required(user_type, user_id):
+    """Check if 2FA is required for user"""
+    pass
+</pre>
+                    </div>
+
+                    <h3>QR Code Management</h3>
+                    <h4>qr_utils.py</h4>
+                    <p>QR code generation, validation, and token management.</p>
+                    <div class="code-block">
+                        <pre>
+def generate_qr_token():
+    """Generate unique QR token"""
+    pass
+
+def generate_qr_code(user_id, username, qr_token):
+    """Generate QR code image with user data"""
+    pass
+
+def validate_qr_scan(qr_token, pin, location):
+    """Validate QR scan and record access"""
+    pass
+
+def regenerate_qr_code(user_id):
+    """Regenerate QR code for user"""
+    pass
+</pre>
+                    </div>
+
+                    <h3>Database Operations</h3>
+                    <h4>database.py</h4>
+                    <p>Database connection management and query execution.</p>
+                    <div class="code-block">
+                        <pre>
+def get_db_connection():
+    """Get database connection with proper configuration"""
+    pass
+
+def execute_query(query, params=(), fetch=False):
+    """Execute SQL query with parameters"""
+    pass
+
+def execute_many(queries):
+    """Execute multiple queries in transaction"""
+    pass
+
+def backup_database(backup_path):
+    """Create database backup"""
+    pass
+</pre>
+                    </div>
+
+                    <h3>Email System</h3>
+                    <h4>email_utils.py</h4>
+                    <p>Email template rendering and SMTP operations.</p>
+                    <div class="code-block">
+                        <pre>
+def send_verification_code(email, code, user_type, purpose):
+    """Send verification code via email"""
+    pass
+
+def send_login_notification(email, user_type, device_info):
+    """Send login notification email"""
+    pass
+
+def send_password_reset(email, user_type, reset_token):
+    """Send password reset instructions"""
+    pass
+
+def render_email_template(template_name, variables):
+    """Render email template with variables"""
+    pass
+</pre>
+                    </div>
+
+                    <h3>Access Control</h3>
+                    <h4>access_control.py</h4>
+                    <p>Location and time-based access rule evaluation.</p>
+                    <div class="code-block">
+                        <pre>
+def check_access_permission(user_id, location, timestamp=None):
+    """Check if user has access to location at given time"""
+    pass
+
+def evaluate_access_rules(user_id, location, timestamp):
+    """Evaluate all access rules for user"""
+    pass
+
+def is_within_time_window(current_time, time_from, time_to):
+    """Check if current time is within allowed window"""
+    pass
+
+def is_within_date_range(current_date, date_from, date_to):
+    """Check if current date is within allowed range"""
+    pass
+</pre>
+                    </div>
+                </div>
+
+                <!-- API ROUTES -->
+                <div class="section" id="api-routes">
+                    <h2>API Routes</h2>
+
+                    <h3>Admin Routes (apps/routes_admin.py)</h3>
+                    <table>
+                        <tr>
+                            <th>Route</th>
+                            <th>Methods</th>
+                            <th>Authentication</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>/admin/dashboard</td>
+                            <td>GET</td>
+                            <td>Admin + 2FA</td>
+                            <td>Admin dashboard with statistics</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/users</td>
+                            <td>GET, POST</td>
+                            <td>Admin + 2FA</td>
+                            <td>User management (list/create)</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/users/&lt;int:user_id&gt;</td>
+                            <td>GET, POST, DELETE</td>
+                            <td>Admin + 2FA</td>
+                            <td>User CRUD operations</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/access-logs</td>
+                            <td>GET</td>
+                            <td>Admin + 2FA</td>
+                            <td>Access log viewing and filtering</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/export/&lt;format&gt;</td>
+                            <td>GET</td>
+                            <td>Admin + 2FA</td>
+                            <td>Data export (CSV/Excel)</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/settings</td>
+                            <td>GET, POST</td>
+                            <td>Admin + 2FA</td>
+                            <td>System configuration</td>
+                        </tr>
+                    </table>
+
+                    <h3>Authentication Routes (apps/routes_auth.py)</h3>
+                    <table>
+                        <tr>
+                            <th>Route</th>
+                            <th>Methods</th>
+                            <th>Authentication</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>/admin/signup</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>Admin account creation</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/login</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>Admin authentication</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/verify-2fa</td>
+                            <td>GET, POST</td>
+                            <td>Admin (pre-2FA)</td>
+                            <td>Two-factor authentication</td>
+                        </tr>
+                        <tr>
+                            <td>/admin/logout</td>
+                            <td>POST</td>
+                            <td>Admin</td>
+                            <td>Session termination</td>
+                        </tr>
+                    </table>
+
+                    <h3>User Routes (apps/routes_user.py)</h3>
+                    <table>
+                        <tr>
+                            <th>Route</th>
+                            <th>Methods</th>
+                            <th>Authentication</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>/user/dashboard</td>
+                            <td>GET</td>
+                            <td>User + 2FA</td>
+                            <td>User dashboard with QR code</td>
+                        </tr>
+                        <tr>
+                            <td>/user/login</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>User authentication</td>
+                        </tr>
+                        <tr>
+                            <td>/user/verify-2fa</td>
+                            <td>GET, POST</td>
+                            <td>User (pre-2FA)</td>
+                            <td>Two-factor authentication</td>
+                        </tr>
+                        <tr>
+                            <td>/user/profile</td>
+                            <td>GET, POST</td>
+                            <td>User + 2FA</td>
+                            <td>User profile management</td>
+                        </tr>
+                        <tr>
+                            <td>/user/access-logs</td>
+                            <td>GET</td>
+                            <td>User + 2FA</td>
+                            <td>Personal access history</td>
+                        </tr>
+                        <tr>
+                            <td>/user/logout</td>
+                            <td>POST</td>
+                            <td>User</td>
+                            <td>Session termination</td>
+                        </tr>
+                    </table>
+
+                    <h3>Scanner Routes (apps/routes_scanner.py)</h3>
+                    <table>
+                        <tr>
+                            <th>Route</th>
+                            <th>Methods</th>
+                            <th>Authentication</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>/scanner</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>QR scanner interface</td>
+                        </tr>
+                        <tr>
+                            <td>/api/verify-scan</td>
+                            <td>POST</td>
+                            <td>None</td>
+                            <td>QR code validation endpoint</td>
+                        </tr>
+                        <tr>
+                            <td>/api/check-pin</td>
+                            <td>POST</td>
+                            <td>None</td>
+                            <td>PIN verification endpoint</td>
+                        </tr>
+                    </table>
+
+                    <h3>API Response Format</h3>
+                    <p>All API endpoints return consistent JSON responses:</p>
+                    <div class="code-block">
+                        <pre>
+{
+    "success": true|false,
+    "message": "Descriptive message",
+    "data": { ... },  // Optional response data
+    "error": "Error code",  // Only on failure
+    "csrf_token": "token"  // For forms requiring CSRF protection
+}
+</pre>
+                    </div>
+                </div>
+
+                <!-- SECURITY IMPLEMENTATION -->
+                <div class="section" id="security">
+                    <h2>Security Implementation</h2>
+
+                    <h3>Password Security</h3>
+                    <ul>
+                        <li><strong>Hashing Algorithm:</strong> SHA-256 with unique per-user salts</li>
+                        <li><strong>Salt Generation:</strong> Cryptographically secure random 32-byte salts</li>
+                        <li><strong>PIN Storage:</strong> Plaintext (required for scanner verification)</li>
+                        <li><strong>PIN Verification:</strong> Constant-time comparison to prevent timing attacks</li>
+                    </ul>
+
+                    <h3>Session Management</h3>
+                    <div class="code-block">
+                        <pre>
+# Session configuration
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+
+# Session data structure
+session = {
+    'user_type': 'admin'|'user',
+    'user_id': 123,
+    'authenticated': True,
+    '2fa_verified': True|False,
+    'login_time': timestamp,
+    'csrf_token': 'random_token'
+}
+</pre>
+                    </div>
+
+                    <h3>CSRF Protection</h3>
+                    <p>Implemented in <code>core/csrf_utils.py</code>:</p>
+                    <ul>
+                        <li>Unique CSRF token per session</li>
+                        <li>Token expiration (1 hour)</li>
+                        <li>Double-submit cookie pattern</li>
+                        <li>Automatic token regeneration after verification</li>
+                    </ul>
+
+                    <h3>Rate Limiting</h3>
+                    <p>Protection against brute force attacks:</p>
+                    <ul>
+                        <li>Prevents users or scripts from sending too many requests in a short period.</li>
+                        <li>Helps block brute-force attempts on login and sensitive endpoints.</li>
+                        <li>Reduces server overload by controlling how often routes can be accessed.</li>
+                        <li>Ensures fair usage so all users can access the system smoothly.</li>
+                        <li>Automatically returns a 429 error when the limit is exceeded.</li>
+                    </ul>
+
+                    <p class="muted">
+                        This system uses Flask-Limiter to monitor request frequency and apply limits per user, IP address, or route.
+                    </p>
+
+
+                    <h3>Input Validation & Sanitization</h3>
+                    <p>Implemented in <code>core/validation.py</code>:</p>
+                    <div class="code-block">
+                        <pre>
+def validate_email(email):
+    """Validate email format and length"""
+    pass
+
+def validate_password(password):
+    """Check password strength requirements"""
+    pass
+
+def sanitize_input(input_string, max_length=255):
+    """Sanitize user input to prevent XSS"""
+    pass
+
+def validate_pin(pin):
+    """Validate 6-digit PIN format"""
+    pass
+
+def validate_location(location):
+    """Validate location name format"""
+    pass
+</pre>
+                    </div>
+
+            <!-- SQL INJECTION PREVENTION -->
+            <div class="section" id="sql-injection">
+                <h2>SQL Injection Prevention</h2>
+
+                <h3>Protection Methods</h3>
+
+                <h4>Parameterized Queries</h4>
+                <p>All database queries use parameterized statements:</p>
+                <div class="code-block">
+                    <pre>
+            # Secure - uses placeholders
+            cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+
+            # Vulnerable - string concatenation  
+            cur.execute(f"SELECT * FROM users WHERE username = '{username}'")
+            </pre>
+                </div>
+
+                <h4>Input Validation</h4>
+                <div class="code-block">
+                    <pre>
+            def sanitize_input(input_string, max_length=255):
+                """Sanitize user input"""
+                if input_string is None:
+                    return ""
+                return str(input_string).strip()[:max_length]
+            </pre>
+                </div>
+
+                <h4>Type Safety</h4>
+                <div class="code-block">
+                    <pre>
+            def get_user_by_id(user_id: int):
+                """Type-safe parameter handling"""
+                user_id = int(user_id)  # Convert to expected type
+                cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+            </pre>
+                </div>
+
+                <div class="success-box">
+                    <strong>Security Implemented:</strong> <br>
+                    • Parameterized queries for all database operations<br>
+                    • Input sanitization and validation<br>
+                    • Type conversion for numeric parameters<br>
+                    • No string concatenation in SQL queries
+                </div>
+            </div>
+
+                    <h3>Secure Headers</h3>
+                    <p>HTTP security headers for protection against common vulnerabilities:</p>
+                    <div class="code-block">
+                        <pre>
+# Security headers configuration
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    return response
+</pre>
+                    </div>
+                </div>
+
+                <!-- AUTHENTICATION FLOW -->
+                <div class="section" id="authentication">
+                    <h2>Authentication Flow</h2>
+
+                    <h3>Admin Authentication Sequence</h3>
+                    <div class="code-block">
+                        <pre>
+1. GET /admin/login
+   - Render login form with CSRF token
+
+2. POST /admin/login
+   - Validate credentials
+   - Check rate limits
+   - Generate session (pre-2FA state)
+   - Send 2FA code via email
+   - Redirect to 2FA verification
+
+3. GET /admin/verify-2fa
+   - Render 2FA form
+
+4. POST /admin/verify-2fa
+   - Validate 2FA code
+   - Check trusted device
+   - Set session as fully authenticated
+   - Redirect to dashboard
+
+5. GET /admin/dashboard
+   - Verify full authentication
+   - Render admin interface
+</pre>
+                    </div>
+
+                    <h3>User Authentication Sequence</h3>
+                    <div class="code-block">
+                        <pre>
+1. GET /user/login
+   - Render login form with CSRF token
+
+2. POST /user/login
+   - Validate credentials
+   - Check force_password_change flag
+   - Generate session (pre-2FA state)
+   - Send 2FA code via email
+   - Redirect to 2FA verification
+
+3. GET /user/verify-2fa
+   - Render 2FA form with trusted device option
+
+4. POST /user/verify-2fa
+   - Validate 2FA code
+   - Optionally trust device
+   - Set session as fully authenticated
+   - Redirect to dashboard
+
+5. GET /user/dashboard
+   - Display user profile and QR code
+   - Show recent access logs
+</pre>
+                    </div>
+
+                    <h3>QR Scanner Authentication Flow</h3>
+                    <div class="code-block">
+                        <pre>
+1. Scanner scans QR code
+   - Extract QR token from code
+
+2. POST /api/verify-scan
+   - Validate QR token exists
+   - Check user account status
+   - Return success with PIN requirement
+
+3. Scanner prompts for PIN
+   - User enters 6-digit PIN
+
+4. POST /api/check-pin
+   - Verify PIN matches
+   - Check access rules for location/time
+   - Record access log entry
+   - Return access grant/deny
+</pre>
+                    </div>
+
+                    <h3>Two-Factor Authentication</h3>
+                    <p>2FA implementation details:</p>
+                    <ul>
+                        <li><strong>Code Generation:</strong> 6-digit numeric codes</li>
+                        <li><strong>Code Expiry:</strong> 10 minutes</li>
+                        <li><strong>Delivery Method:</strong> Email only</li>
+                        <li><strong>Retry Limits:</strong> 3 attempts per code</li>
+                        <li><strong>Trusted Devices:</strong> 30-day bypass capability</li>
+                    </ul>
+
+                    <h3>Session States</h3>
+                    <table>
+                        <tr>
+                            <th>State</th>
+                            <th>Session Flags</th>
+                            <th>Allowed Actions</th>
+                        </tr>
+                        <tr>
+                            <td>Unauthenticated</td>
+                            <td>None set</td>
+                            <td>Login pages only</td>
+                        </tr>
+                        <tr>
+                            <td>Pre-2FA</td>
+                            <td>authenticated=True, 2fa_verified=False</td>
+                            <td>2FA verification only</td>
+                        </tr>
+                        <tr>
+                            <td>Fully Authenticated</td>
+                            <td>authenticated=True, 2fa_verified=True</td>
+                            <td>All authorized routes</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- DEPLOYMENT -->
+                <div class="section" id="deployment">
+                    <h2>Deployment</h2>
+
+                    <h3>Production Checklist</h3>
+                    <ul>
+                        <li> Use production-grade web server (Gunicorn, uWSGI)</li>
+                        <li> Configure reverse proxy (Nginx, Apache)</li>
+                        <li> Enable HTTPS with trusted certificates</li>
+                        <li> Set strong SECRET_KEY in environment</li>
+                        <li> Configure proper SMTP credentials</li>
+                        <li> Set APP_ENV=production</li>
+                        <li> Regular database backups</li>
+                        <li> Monitor application logs</li>
+                        <li> Configure firewall rules</li>
+                    </ul>
+
+                    <h3>Web Server Configuration</h3>
+                    <h4>Gunicorn Configuration (gunicorn.conf.py)</h4>
+                    <div class="code-block">
+                        <pre>
+bind = "0.0.0.0:5000"
+workers = 4
+worker_class = "sync"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+max_requests = 1000
+max_requests_jitter = 100
+preload_app = True
+</pre>
+                    </div>
+
+                    <h4>Nginx Configuration</h4>
+                    <div class="code-block">
+                        <pre>
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /static {
+        alias /path/to/Accesium/static;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+</pre>
+                    </div>
+
+                    <h3>Database Maintenance</h3>
+                    <h4>Automated Backups</h4>
+                    <div class="code-block">
+                        <pre>
+#!/bin/bash
+# backup_script.sh
+
+BACKUP_DIR="/path/to/backups"
+DB_PATH="/path/to/data/security_app.db"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Create backup
+sqlite3 $DB_PATH ".backup '$BACKUP_DIR/backup_$DATE.db'"
+
+# Compress backup
+gzip "$BACKUP_DIR/backup_$DATE.db"
+
+# Remove backups older than 30 days
+find $BACKUP_DIR -name "*.db.gz" -mtime +30 -delete
+</pre>
+                    </div>
+
+                    <h4>Database Optimization</h4>
+                    <div class="code-block">
+                        <pre>
+# Regular maintenance script
+sqlite3 data/security_app.db <<EOF
+VACUUM;
+REINDEX;
+ANALYZE;
+EOF
+</pre>
+                    </div>
+
+                    <h3>Monitoring & Logging</h3>
+                    <p>Application logs are written to stdout/stderr. Recommended monitoring:</p>
+                    <ul>
+                        <li>Application error rates</li>
+                        <li>Database connection pool</li>
+                        <li>Disk space for QR codes and exports</li>
+                        <li>Failed login attempts</li>
+                        <li>Email delivery success rates</li>
+                    </ul>
+                </div>
+
+                <!-- EXTENDING THE SYSTEM -->
+                <div class="section" id="extending">
+                    <h2>Extending the System</h2>
+
+                    <h3>Adding New User Roles</h3>
+                    <p>To add new user roles, modify the following locations:</p>
+                    <div class="code-block">
+                        <pre>
+# 1. Update database schema (if needed)
+ALTER TABLE users ADD COLUMN department TEXT;
+
+# 2. Update user creation in routes_admin.py
+def create_user():
+    # Add new role handling
+    if role == "new_role":
+        # Custom logic for new role
+        pass
+
+# 3. Update validation in validation.py
+def validate_role(role):
+    valid_roles = ["Staff", "Employee", "Student", "Teacher", "Visitor", "new_role"]
+    return role in valid_roles
+
+# 4. Update templates to display new role
+</pre>
+                    </div>
+
+                    <h3>Custom Access Rules</h3>
+                    <p>Implement custom access control logic:</p>
+                    <div class="code-block">
+                        <pre>
+# In core/access_control.py
+def check_custom_access_rule(user_id, location, timestamp):
+    """Implement custom business logic"""
+    user = get_user_by_id(user_id)
+    
+    # Example: Restrict access based on custom criteria
+    if user['role'] == 'Contractor' and is_weekend(timestamp):
+        return False
+        
+    return True
+
+# Integrate with existing access control
+def check_access_permission(user_id, location, timestamp=None):
+    # Existing rules check
+    if not evaluate_access_rules(user_id, location, timestamp):
+        return False
+        
+    # Custom rules check
+    if not check_custom_access_rule(user_id, location, timestamp):
+        return False
+        
+    return True
+</pre>
+                    </div>
+
+                    <h3>Adding New Export Formats</h3>
+                    <p>Extend the export functionality:</p>
+                    <div class="code-block">
+                        <pre>
+# In apps/routes_admin.py
+@app.route('/admin/export/&lt;format&gt;')
+@admin_login_required
+@require_2fa
+def export_data(format):
+    if format == 'pdf':
+        return generate_pdf_export()
+    elif format == 'json':
+        return generate_json_export()
+    else:
+        return "Unsupported format", 400
+
+def generate_pdf_export():
+    """Implement PDF export using ReportLab or similar"""
+    pass
+
+def generate_json_export():
+    """Implement JSON export"""
+    data = get_export_data()
+    return jsonify(data)
+</pre>
+                    </div>
+
+                    <h3>Integration with External Systems</h3>
+                    <p>Example: Integrate with building access system</p>
+                    <div class="code-block">
+                        <pre>
+# core/external_integrations.py
+class BuildingAccessSystem:
+    def __init__(self, api_url, api_key):
+        self.api_url = api_url
+        self.api_key = api_key
+        
+    def grant_access(self, user_id, location, duration=30):
+        """Grant temporary access to building"""
+        payload = {
+            'user_id': user_id,
+            'location': location,
+            'duration': duration,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        
+        response = requests.post(
+            f"{self.api_url}/grant-access",
+            json=payload,
+            headers={'Authorization': f'Bearer {self.api_key}'}
+        )
+        
+        return response.status_code == 200
+
+# Usage in QR verification
+def validate_qr_scan(qr_token, pin, location):
+    # Existing validation logic
+    if access_granted:
+        # Integrate with building system
+        building_system = BuildingAccessSystem(API_URL, API_KEY)
+        building_system.grant_access(user_id, location)
+</pre>
+                    </div>
+
+                    <h3>Custom Email Templates</h3>
+                    <p>Create custom email templates for different notifications:</p>
+                    <div class="code-block">
+                        <pre>
+# Add new template in email_utils.py
+def send_custom_notification(email, template_vars):
+    template = """
+    Subject: Custom Notification
+    
+    Hello {name},
+    
+    {custom_message}
+    
+    Best regards,
+    Accesium Team
+    """
+    
+    message = template.format(**template_vars)
+    send_email(email, "Custom Notification", message)
+
+# Usage
+send_custom_notification(user_email, {
+    'name': user_name,
+    'custom_message': 'Your custom notification message here'
+})
+</pre>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Extension Best Practices:</strong>
+                        <ul>
+                            <li>Follow existing code patterns and naming conventions</li>
+                            <li>Add proper error handling for new features</li>
+                            <li>Update documentation when adding new functionality</li>
+                            <li>Test extensions thoroughly before deployment</li>
+                            <li>Consider backward compatibility when modifying existing features</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>Accesium Access Control System &copy; 2024. Built with Flask and modern web technologies.</p>
+            <p>For support and contributions, refer to the project documentation.</p>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Update active sidebar link on scroll
+        const sections = document.querySelectorAll('.section');
+        const sidebarLinks = document.querySelectorAll('.sidebar a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Add copy functionality to code blocks
+        document.querySelectorAll('.code-block').forEach(block => {
+            block.style.position = 'relative';
+
+            const copyButton = document.createElement('button');
+            copyButton.innerHTML = 'Copy';
+            copyButton.style.position = 'absolute';
+            copyButton.style.top = '8px';
+            copyButton.style.right = '8px';
+            copyButton.style.background = '#2c2c2c';
+            copyButton.style.color = 'white';
+            copyButton.style.border = 'none';
+            copyButton.style.padding = '4px 8px';
+            copyButton.style.borderRadius = '4px';
+            copyButton.style.cursor = 'pointer';
+            copyButton.style.fontSize = '0.8rem';
+
+            copyButton.addEventListener('click', () => {
+                const code = block.querySelector('pre').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    copyButton.innerHTML = 'Copied!';
+                    setTimeout(() => {
+                        copyButton.innerHTML = 'Copy';
+                    }, 2000);
+                });
+            });
+
+            block.appendChild(copyButton);
+        });
+    </script>
+</body>
+
+</html>

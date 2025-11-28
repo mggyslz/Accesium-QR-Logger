@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/assets/favicon.ico') }}"/>
+    <title>Accesium Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+            color: white;
+            padding: 2.5rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem auto;
+        }
+
+        .sidebar {
+            flex: 0 0 250px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #2c2c2c;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar a {
+            color: #666;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar a:hover {
+            color: #2c2c2c;
+            background: #f5f5f5;
+        }
+
+        .sidebar a.active {
+            color: #2c2c2c;
+            background: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .content {
+            flex: 1;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: #2c2c2c;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #2c2c2c;
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            color: #333;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section h4 {
+            font-size: 1.1rem;
+            color: #444;
+            margin: 1.25rem 0 0.75rem;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            border: 1px solid #e5e5e5;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .feature-card h4 {
+            color: #2c2c2c;
+            margin: 0 0 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 1.5rem;
+            padding-left: 3rem;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #2c2c2c;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid #e5e5e5;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-admin {
+            background: #2c2c2c;
+            color: white;
+        }
+
+        .badge-user {
+            background: #2196F3;
+            color: white;
+        }
+
+        .badge-scanner {
+            background: #4CAF50;
+            color: white;
+        }
+
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        ul li, ol li {
+            margin: 0.5rem 0;
+        }
+
+        .footer {
+            background: #2c2c2c;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+            color: #2c2c2c;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: static;
+                max-height: none;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 1.5rem;
+            }
+
+            .section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Accesium Documentation</h1>
+            <p>Complete User Guide & System Manual</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>Documentation</h3>
+                <ul>
+                    <li><a href="#overview" class="active">System Overview</a></li>
+                    <li><a href="#getting-started">Getting Started</a></li>
+                    <li><a href="#admin">Administrator Guide</a></li>
+                    <li><a href="#user">User Guide</a></li>
+                    <li><a href="#scanner">QR Scanner Guide</a></li>
+                    <li><a href="#security">Security Features</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                    <li><a href="#faq">Frequently Asked Questions</a></li>
+                    <li><a href="#best-practices">Best Practices</a></li>
+                    <li><a href="#requirements">System Requirements</a></li>
+                </ul>
+            </div>
+
+            <div class="content">
+                <!-- OVERVIEW SECTION -->
+                <div class="section" id="overview">
+                    <div class="section-header">
+                        <h2>System Overview</h2>
+                    </div>
+                    
+                    <p><strong>Accesium</strong> is a modern QR-based access control system designed to track and manage entry/exit of personnel in facilities, schools, offices, or any secure location.</p>
+
+                    <h3>Key Features</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>Secure Authentication</h4>
+                            <p>Two-factor authentication with email verification and trusted device management</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Real-time Analytics</h4>
+                            <p>Live dashboards with activity charts, heatmaps, and attendance tracking</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>User Management</h4>
+                            <p>Complete user lifecycle management with roles and access rules</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>QR Code Scanning</h4>
+                            <p>Fast, contactless entry with unique QR codes and PIN verification</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Dark Mode</h4>
+                            <p>Comfortable viewing experience with automatic theme switching</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Multiple Locations</h4>
+                            <p>Support for multiple entry points with location-based tracking</p>
+                        </div>
+                    </div>
+
+                    <h3>System Components</h3>
+                    <table>
+                        <tr>
+                            <th>Component</th>
+                            <th>Purpose</th>
+                            <th>Users</th>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-admin">Admin Portal</span></td>
+                            <td>System management, user creation, analytics</td>
+                            <td>Administrators</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-user">User Portal</span></td>
+                            <td>Personal dashboard, QR code access, attendance records</td>
+                            <td>All registered users</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-scanner">Scanner</span></td>
+                            <td>QR code scanning for entry/exit</td>
+                            <td>Security personnel</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- GETTING STARTED -->
+                <div class="section" id="getting-started">
+                    <div class="section-header">
+                        <h2>Getting Started</h2>
+                    </div>
+
+                    <h3>First-Time Setup</h3>
+                    
+                    <div class="info-box">
+                        <strong>Note:</strong> The first admin account must be created before any other accounts can be added.
+                    </div>
+
+                    <h4>Creating the First Admin Account</h4>
+                    <ol class="step-list">
+                        <li>Navigate to the landing page at <code>/</code></li>
+                        <li>Click on <strong>"Admin Login"</strong></li>
+                        <li>Click <strong>"Sign Up"</strong> (only visible if no admin exists)</li>
+                        <li>Fill in the registration form:
+                            <ul>
+                                <li>Username (minimum 3 characters)</li>
+                                <li>Email address</li>
+                                <li>Full name</li>
+                                <li>Password (minimum 6 characters)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Create Admin Account"</strong></li>
+                        <li>You'll be automatically logged in to the admin dashboard</li>
+                    </ol>
+                </div>
+
+                <!-- ADMIN GUIDE -->
+                <div class="section" id="admin">
+                    <div class="section-header">
+                        <h2>Administrator Guide</h2>
+                    </div>
+
+                    <h3>Dashboard Overview</h3>
+                    <p>The admin dashboard provides a comprehensive view of system activity:</p>
+                    <ul>
+                        <li><strong>Currently Inside:</strong> Real-time count of people in the facility</li>
+                        <li><strong>Total Users:</strong> Number of registered users</li>
+                        <li><strong>Active Location:</strong> Current scanning location</li>
+                        <li><strong>Recent Activity:</strong> Latest entry/exit events</li>
+                        <li><strong>Activity Charts:</strong> 7-day and hourly activity graphs</li>
+                    </ul>
+
+                    <h3>User Management</h3>
+
+                    <h4>Creating New Users</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Registered Users</strong> section</li>
+                        <li>Fill in the "Add New User" form:
+                            <ul>
+                                <li><strong>Email:</strong> User's email address (required for login)</li>
+                                <li><strong>Full Name:</strong> User's complete name</li>
+                                <li><strong>Role:</strong> Select from Staff, Employee, Student, Teacher, or Visitor</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Create User"</strong></li>
+                        <li>The system will:
+                            <ul>
+                                <li>Generate a username automatically (firstname.lastname format)</li>
+                                <li>Create a temporary password</li>
+                                <li>Generate a 6-digit PIN for QR scanning</li>
+                                <li>Create a unique QR code</li>
+                                <li>Send credentials via email</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <div class="success-box">
+                        <strong>Automatic Credentials:</strong> Users receive their username, password, and PIN via email. They must change their password on first login for security.
+                    </div>
+
+                    <h4>Managing Existing Users</h4>
+                    <ul>
+                        <li><strong>Search:</strong> Use the search box to find users by name or role</li>
+                        <li><strong>View QR Code:</strong> Click on the QR code image to view full size</li>
+                        <li><strong>Download QR Code:</strong> Click the download link to save the QR code</li>
+                        <li><strong>Delete User:</strong> Click the "Delete" button to permanently remove a user</li>
+                    </ul>
+
+                    <h3>Attendance Records</h3>
+
+                    <h4>Viewing Attendance</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Attendance Records</strong></li>
+                        <li>Use filters to refine results:
+                            <ul>
+                                <li><strong>Search:</strong> Filter by name</li>
+                                <li><strong>Date Range:</strong> Select from/to dates</li>
+                                <li><strong>Action:</strong> Filter by IN or OUT only</li>
+                                <li><strong>Location:</strong> Filter by specific location</li>
+                            </ul>
+                        </li>
+                        <li>Browse paginated results (50 records per page)</li>
+                    </ol>
+
+                    <h4>Exporting Data</h4>
+                    <p>Two export formats are available:</p>
+                    <ul>
+                        <li><strong>Excel Export:</strong> Includes multiple sheets (All Records, IN Records, OUT Records, Summary) with formatting</li>
+                        <li><strong>CSV Export:</strong> Simple comma-separated values for compatibility</li>
+                    </ul>
+
+                    <h3>Access Rules</h3>
+                    <p>Control when and where users can access the facility.</p>
+
+                    <h4>Creating Access Rules</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Access Rules</strong></li>
+                        <li>Choose user selection method:
+                            <ul>
+                                <li><strong>Bulk Selection:</strong> Select multiple users using checkboxes</li>
+                                <li><strong>Single Selection:</strong> Use dropdown for individual user</li>
+                            </ul>
+                        </li>
+                        <li>Configure rule parameters:
+                            <ul>
+                                <li><strong>Rule Type:</strong> Whitelist (only allow) or Blacklist (deny)</li>
+                                <li><strong>Location:</strong> Specific location or all locations</li>
+                                <li><strong>Time Range:</strong> Allowed hours (optional)</li>
+                                <li><strong>Date Range:</strong> Valid date period (optional)</li>
+                                <li><strong>Specific Dates:</strong> Comma-separated dates (optional)</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Add Rule(s)"</strong></li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Rule Priority:</strong> Blacklist rules take precedence over whitelist rules. If a user matches both, access will be denied.
+                    </div>
+
+                    <h3>Location Management</h3>
+                    <p>Set the active scanning location:</p>
+                    <ol class="step-list">
+                        <li>Use the <strong>Active Location</strong> dropdown in the top bar</li>
+                        <li>Select from predefined locations:
+                            <ul>
+                                <li>Main Gate</li>
+                                <li>Reception</li>
+                                <li>Office Area</li>
+                                <li>Classroom</li>
+                                <li>Library</li>
+                                <li>Supply Area</li>
+                                <li>Back Gate</li>
+                            </ul>
+                        </li>
+                        <li>All scans will be logged with this location</li>
+                    </ol>
+
+                    <h3>Security Settings</h3>
+
+                    <h4>Session Management</h4>
+                    <ul>
+                        <li><strong>Session Timeout:</strong> Configure auto-logout time (15-480 minutes)</li>
+                        <li><strong>Warning Period:</strong> Users get a 2-minute warning before timeout</li>
+                    </ul>
+
+                    <h4>Login Security</h4>
+                    <ul>
+                        <li><strong>2FA Requirement:</strong> Enable/disable mandatory two-factor authentication</li>
+                        <li><strong>Account Lockout:</strong> Enable lockout after failed attempts</li>
+                        <li><strong>Lockout Threshold:</strong> Set number of attempts (3-10)</li>
+                        <li><strong>Lockout Duration:</strong> 15 minutes by default</li>
+                    </ul>
+
+                    <h3>Changing Admin Password</h3>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Settings</strong></li>
+                        <li>Find the <strong>Change Password</strong> section</li>
+                        <li>Enter:
+                            <ul>
+                                <li>Current password</li>
+                                <li>New password (minimum 6 characters)</li>
+                                <li>Confirm new password</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Change Password"</strong></li>
+                        <li>You'll receive an email notification of the change</li>
+                    </ol>
+                </div>
+
+                <!-- USER GUIDE -->
+                <div class="section" id="user">
+                    <div class="section-header">
+                        <h2>User Guide</h2>
+                    </div>
+
+                    <h3>First Login</h3>
+                    <ol class="step-list">
+                        <li>Check your email for credentials from the admin</li>
+                        <li>Navigate to <strong>User Login</strong></li>
+                        <li>Enter your username or email and temporary password</li>
+                        <li>If 2FA is enabled:
+                            <ul>
+                                <li>Enter the 6-digit code sent to your email</li>
+                                <li>Optionally check "Remember this device" to skip 2FA for 30 days</li>
+                            </ul>
+                        </li>
+                        <li>You'll be prompted to change your password</li>
+                    </ol>
+
+                    <div class="warning-box">
+                        <strong>Password Change Required:</strong> For security, you must change your temporary password on first login.
+                    </div>
+
+                    <h3>How to Request an Account</h3>
+                    <p>If you don't have an account yet, you need to request one from the administrator.</p>
+
+                    <ol class="step-list">
+                        <li>Send an email to the administrator at: <strong>qrcodecode49@gmail.com</strong></li>
+                        <li>Use the following format for your request:
+                            <div class="code-block">
+                    Subject: Account Registration Request - [Your Full Name]
+
+                    Good day,
+
+                    I would like to request an account for the Accesium system.
+
+                    Full Name: [Your complete name]
+                    Email Address: [Your email address]
+                    Role: [Choose one: Staff / Employee / Student / Teacher / Visitor]
+
+                    Thank you.
+
+                    Best regards,
+                    [Your Name]
+                            </div>
+                        </li>
+                        <li>Wait for the administrator to process your request</li>
+                        <li>You'll receive your login credentials via email once approved</li>
+                        <li>Follow the <strong>First Login</strong> steps above to access your account</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Important:</strong> Make sure to provide a valid email address as all your credentials and notifications will be sent there.
+                    </div>
+
+                    <h3>Dashboard Features</h3>
+
+                    <h4>Today's Statistics</h4>
+                    <ul>
+                        <li><strong>Today's Scans:</strong> Total number of scans today</li>
+                        <li><strong>Times In:</strong> Number of entry scans</li>
+                        <li><strong>Times Out:</strong> Number of exit scans</li>
+                        <li><strong>Current Status:</strong> Whether you're currently IN or OUT</li>
+                    </ul>
+
+                    <h4>Recent Activity</h4>
+                    <p>Shows your last location scan with timestamp.</p>
+
+                    <h4>Activity Heatmap</h4>
+                    <p>GitHub-style visualization showing your scan activity over the past 365 days:</p>
+                    <ul>
+                        <li><strong>Green squares:</strong> Days with activity (darker = more scans)</li>
+                        <li><strong>Gray squares:</strong> Days with no activity</li>
+                        <li><strong>Hover:</strong> See exact scan count for each day</li>
+                    </ul>
+
+                    <h3>Your QR Code</h3>
+
+                    <h4>Accessing Your QR Code</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>My QR Code</strong></li>
+                        <li>View your personal QR code and details</li>
+                        <li>Note your <strong>6-digit PIN</strong> (required for scanning)</li>
+                        <li>Download QR code for printing if needed</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Scanner PIN:</strong> Your PIN is different from your login password. It's only used at the QR scanner for entry/exit verification.
+                    </div>
+
+                    <h3>Attendance Records</h3>
+
+                    <h4>Viewing Your History</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Attendance Records</strong></li>
+                        <li>Use filters to find specific records:
+                            <ul>
+                                <li><strong>Date Range:</strong> Select from/to dates</li>
+                                <li><strong>Action:</strong> Filter by IN or OUT</li>
+                            </ul>
+                        </li>
+                        <li>View details for each scan:
+                            <ul>
+                                <li>Log ID</li>
+                                <li>Action (IN/OUT)</li>
+                                <li>Date and time</li>
+                                <li>Location</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h3>Trusted Devices</h3>
+                    <p>Devices marked as trusted can skip 2FA for 30 days.</p>
+
+                    <h4>Adding a Trusted Device</h4>
+                    <ol class="step-list">
+                        <li>During login, after entering your password</li>
+                        <li>When prompted for 2FA code, check <strong>"Remember this device"</strong></li>
+                        <li>Enter your verification code</li>
+                        <li>Device will be remembered for 30 days</li>
+                    </ol>
+
+                    <h4>Managing Trusted Devices</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Trusted Devices</strong></li>
+                        <li>View all your trusted devices with details:
+                            <ul>
+                                <li>Device name</li>
+                                <li>IP address</li>
+                                <li>Date added</li>
+                                <li>Last used</li>
+                                <li>Expiration date</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Remove"</strong> to revoke trust for any device</li>
+                    </ol>
+
+                    <h3>Profile Settings</h3>
+
+                    <h4>Updating Profile</h4>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>Settings</strong></li>
+                        <li>Enable/disable <strong>Dark Mode</strong></li>
+                        <li>Update your information:
+                            <ul>
+                                <li><strong>Username:</strong> Change your login username</li>
+                                <li><strong>Full Name:</strong> Update your display name</li>
+                                <li><strong>Role:</strong> Cannot be changed (contact admin)</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h4>Changing Password</h4>
+                    <ol class="step-list">
+                        <li>In Settings, find the <strong>Change Password</strong> section</li>
+                        <li>Enter new password (twice for confirmation)</li>
+                        <li>Leave blank if you don't want to change it</li>
+                        <li>Click <strong>"Save Changes"</strong></li>
+                        <li>You'll receive an email notification</li>
+                    </ol>
+
+                    <div class="success-box">
+                        <strong>Password Requirements:</strong>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li>Minimum 6 characters</li>
+                            <li>At least one letter</li>
+                            <li>At least one number or special character</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- SCANNER GUIDE -->
+                <div class="section" id="scanner">
+                    <div class="section-header">
+                        <h2>QR Scanner Guide</h2>
+                    </div>
+
+                    <h3>Accessing the Scanner</h3>
+                    <ol class="step-list">
+                        <li>Navigate to <strong>/scanner</strong></li>
+                        <li>Allow camera permissions when prompted</li>
+                        <li>Scanner interface will display with live video feed</li>
+                    </ol>
+
+                    <h3>Scanning Process</h3>
+
+                    <h4>For Entry (Last Action: OUT or First Scan)</h4>
+                    <ol class="step-list">
+                        <li>User presents their QR code to camera</li>
+                        <li>System identifies the user</li>
+                        <li>System checks access rules for the current location</li>
+                        <li>If allowed, system prompts for PIN entry</li>
+                        <li>User enters their 6-digit PIN</li>
+                        <li>System logs IN with timestamp and location</li>
+                        <li>Success message displays with user name</li>
+                    </ol>
+
+                    <h4>For Exit (Last Action: IN)</h4>
+                    <ol class="step-list">
+                        <li>User presents their QR code to camera</li>
+                        <li>System identifies the user</li>
+                        <li>System automatically logs OUT (no PIN required)</li>
+                        <li>Success message displays with user name</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Automatic Logic:</strong> The system automatically determines if a scan is for entry or exit based on the user's last action. Exit scans don't require PIN for faster processing.
+                    </div>
+
+                    <h3>Scanner Display</h3>
+
+                    <h4>Left Side: Video Feed</h4>
+                    <ul>
+                        <li>Live camera view with scanning frame</li>
+                        <li>Animated corners indicating scan area</li>
+                        <li>Scanning line animation showing active status</li>
+                    </ul>
+
+                    <h4>Right Side: Information Panel</h4>
+                    <ul>
+                        <li><strong>Status Display:</strong> Shows scan results and messages</li>
+                        <li><strong>Currently Inside:</strong> Live count of people in facility</li>
+                        <li><strong>Today's Scans:</strong> Total scans for current day</li>
+                    </ul>
+
+                    <h3>Error Messages</h3>
+                    <table>
+                        <tr>
+                            <th>Message</th>
+                            <th>Meaning</th>
+                            <th>Action</th>
+                        </tr>
+                        <tr>
+                            <td>"Unknown QR code"</td>
+                            <td>QR code not registered in system</td>
+                            <td>Contact admin to register</td>
+                        </tr>
+                        <tr>
+                            <td>"[Name] is inactive"</td>
+                            <td>User account is deactivated</td>
+                            <td>Contact admin to reactivate</td>
+                        </tr>
+                        <tr>
+                            <td>"Invalid PIN"</td>
+                            <td>Entered PIN doesn't match records</td>
+                            <td>Re-enter correct PIN or contact admin</td>
+                        </tr>
+                        <tr>
+                            <td>"Access denied: [Reason]"</td>
+                            <td>User blocked by access rule</td>
+                            <td>Check access rules or contact admin</td>
+                        </tr>
+                    </table>
+
+                    <h3>Best Practices</h3>
+                    <ul>
+                        <li><strong>Lighting:</strong> Ensure adequate lighting on QR codes</li>
+                        <li><strong>Distance:</strong> Hold QR code 6-12 inches from camera</li>
+                        <li><strong>Angle:</strong> Keep QR code parallel to camera lens</li>
+                        <li><strong>Cleanliness:</strong> Keep QR codes and camera lens clean</li>
+                        <li><strong>Speed:</strong> Hold steady for 1-2 seconds during scan</li>
+                    </ul>
+                </div>
+
+                <!-- SECURITY FEATURES -->
+                <div class="section" id="security">
+                    <div class="section-header">
+                        <h2>Security Features</h2>
+                    </div>
+
+                    <h3>Authentication</h3>
+
+                    <h4>Two-Factor Authentication (2FA)</h4>
+                    <p>Enhanced security layer requiring email verification:</p>
+                    <ul>
+                        <li><strong>Email Codes:</strong> 6-digit verification codes sent to registered email</li>
+                        <li><strong>Time-Limited:</strong> Codes expire after 10 minutes</li>
+                        <li><strong>One-Time Use:</strong> Each code can only be used once</li>
+                        <li><strong>Trusted Devices:</strong> Option to skip 2FA for 30 days on trusted devices</li>
+                    </ul>
+
+                    <h4>Password Security</h4>
+                    <ul>
+                        <li><strong>Hashing:</strong> All passwords are securely hashed using industry-standard algorithms</li>
+                        <li><strong>Salt:</strong> Unique salt for each password prevents rainbow table attacks</li>
+                        <li><strong>Force Change:</strong> Admin-created accounts require password change on first login</li>
+                        <li><strong>Strength Requirements:</strong> Minimum 6 characters with letters and numbers/symbols</li>
+                    </ul>
+
+                    <h4>Account Lockout</h4>
+                    <p>Protection against brute-force attacks:</p>
+                    <ul>
+                        <li><strong>Failed Attempts:</strong> Configurable threshold (default: 5 attempts)</li>
+                        <li><strong>Lockout Duration:</strong> 15 minutes automatic lockout</li>
+                        <li><strong>Email Notification:</strong> User notified when account is locked</li>
+                        <li><strong>Auto-Reset:</strong> Counter resets on successful login</li>
+                    </ul>
+
+                    <h3>Session Management</h3>
+
+                    <h4>Session Security</h4>
+                    <ul>
+                        <li><strong>CSRF Protection:</strong> All forms protected with CSRF tokens</li>
+                        <li><strong>Session Regeneration:</strong> Session ID regenerated on login/logout</li>
+                        <li><strong>Secure Cookies:</strong> HttpOnly and Secure flags enabled</li>
+                        <li><strong>Inactivity Timeout:</strong> Configurable auto-logout (default: 30 minutes)</li>
+                    </ul>
+
+                    <h4>Timeout Warning</h4>
+                    <ol class="step-list">
+                        <li>System monitors user activity</li>
+                        <li>At 2 minutes before timeout, warning modal appears</li>
+                        <li>User can:
+                            <ul>
+                                <li><strong>Extend Session:</strong> Continue working</li>
+                                <li><strong>Logout:</strong> End session immediately</li>
+                            </ul>
+                        </li>
+                        <li>If no action taken, automatic logout occurs</li>
+                    </ol>
+
+                    <h3>Data Protection</h3>
+
+                    <h4>Input Validation</h4>
+                    <p>All user inputs are validated and sanitized:</p>
+                    <ul>
+                        <li><strong>Username:</strong> Alphanumeric, underscore, hyphen only (3-50 chars)</li>
+                        <li><strong>Email:</strong> Valid email format required</li>
+                        <li><strong>Name:</strong> Letters, spaces, hyphens, apostrophes only (2-100 chars)</li>
+                        <li><strong>XSS Prevention:</strong> HTML tags and scripts stripped from inputs</li>
+                    </ul>
+
+                    <h4>Rate Limiting</h4>
+                    <p>Prevents abuse and DOS attacks:</p>
+                    <table>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Limit</th>
+                            <th>Window</th>
+                        </tr>
+                        <tr>
+                            <td>Login attempts</td>
+                            <td>10 requests</td>
+                            <td>60 seconds</td>
+                        </tr>
+                        <tr>
+                            <td>User registration</td>
+                            <td>5 requests</td>
+                            <td>300 seconds</td>
+                        </tr>
+                        <tr>
+                            <td>Password change</td>
+                            <td>5 requests</td>
+                            <td>300 seconds</td>
+                        </tr>
+                        <tr>
+                            <td>Export data</td>
+                            <td>5-7 requests</td>
+                            <td>300-700 seconds</td>
+                        </tr>
+                    </table>
+
+                    <h3>Access Control</h3>
+
+                    <h4>Role-Based Access</h4>
+                    <ul>
+                        <li><strong>Admin:</strong> Full system access, user management, settings</li>
+                        <li><strong>User:</strong> Personal dashboard, QR code, own attendance records</li>
+                        <li><strong>Scanner:</strong> QR scanning only (no authentication required)</li>
+                    </ul>
+
+                    <h4>Access Rules</h4>
+                    <p>Granular control over facility access:</p>
+                    <ul>
+                        <li><strong>Location-Based:</strong> Allow/deny specific locations</li>
+                        <li><strong>Time-Based:</strong> Restrict access to specific hours</li>
+                        <li><strong>Date-Based:</strong> Set valid date ranges or specific dates</li>
+                        <li><strong>Priority:</strong> Blacklist rules override whitelist rules</li>
+                    </ul>
+
+                    <h3>Audit & Logging</h3>
+
+                    <h4>Activity Logging</h4>
+                    <p>All system actions are logged:</p>
+                    <ul>
+                        <li><strong>Access Logs:</strong> Every entry/exit with timestamp and location</li>
+                        <li><strong>Login Attempts:</strong> Success and failure tracking with IP addresses</li>
+                        <li><strong>Suspicious Activity:</strong> Invalid inputs, failed validations, rate limit hits</li>
+                        <li><strong>User Changes:</strong> Account creation, modification, deletion</li>
+                    </ul>
+
+                    <h4>Notifications</h4>
+                    <p>Real-time alerts for security events:</p>
+                    <ul>
+                        <li><strong>Failed Login:</strong> User notified of failed attempts</li>
+                        <li><strong>Account Locked:</strong> Email sent when account is locked</li>
+                        <li><strong>Password Changed:</strong> Confirmation email on password change</li>
+                        <li><strong>New Device Login:</strong> Alert when logging in from new device</li>
+                    </ul>
+                </div>
+
+                <!-- TROUBLESHOOTING -->
+                <div class="section" id="troubleshooting">
+                    <div class="section-header">
+                        <h2>Troubleshooting</h2>
+                    </div>
+
+                    <h3>Login Issues</h3>
+
+                    <h4>Problem: "Invalid username/email or password"</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Verify username/email spelling (case-sensitive)</li>
+                        <li>Check password carefully (case-sensitive)</li>
+                        <li>Ensure Caps Lock is off</li>
+                        <li>Contact admin if you're a new user waiting for activation</li>
+                    </ul>
+
+                    <h4>Problem: "Account temporarily locked"</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Wait 15 minutes for automatic unlock</li>
+                        <li>Check email for lockout notification</li>
+                        <li>Contact admin if you didn't attempt multiple logins</li>
+                    </ul>
+
+                    <h4>Problem: "Invalid or expired verification code"</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check if code is less than 10 minutes old</li>
+                        <li>Enter all 6 digits exactly as shown</li>
+                        <li>Click "Resend Code" to get a new one</li>
+                        <li>Check spam/junk folder for email</li>
+                        <li>Verify email address is correct in your profile</li>
+                    </ul>
+
+                    <h3>Scanner Issues</h3>
+
+                    <h4>Problem: Camera not working</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check browser permissions for camera access</li>
+                        <li>Try a different browser (Chrome recommended)</li>
+                        <li>Ensure camera is not in use by another application</li>
+                        <li>Refresh the page and allow camera again</li>
+                        <li>Check if camera hardware is functioning</li>
+                    </ul>
+
+                    <h4>Problem: QR code not scanning</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Hold QR code steady for 2-3 seconds</li>
+                        <li>Ensure adequate lighting on QR code</li>
+                        <li>Clean the QR code (no smudges or damage)</li>
+                        <li>Position QR code 6-12 inches from camera</li>
+                        <li>Keep QR code flat and parallel to camera</li>
+                        <li>Try printing a new QR code if damaged</li>
+                    </ul>
+
+                    <h4>Problem: "Access denied" message</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check if there's an access rule blocking entry</li>
+                        <li>Verify current time is within allowed hours</li>
+                        <li>Confirm correct location is set in system</li>
+                        <li>Contact admin to review access rules</li>
+                    </ul>
+
+                    <h3>Email Issues</h3>
+
+                    <h4>Problem: Not receiving emails</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check spam/junk folder</li>
+                        <li>Add system email to safe senders list</li>
+                        <li>Verify email address in profile is correct</li>
+                        <li>Check if email server is configured (admin)</li>
+                        <li>Try a different email address</li>
+                    </ul>
+
+                    <h4>Problem: 2FA emails delayed</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Wait up to 5 minutes for email delivery</li>
+                        <li>Click "Resend Code" if needed</li>
+                        <li>Check internet connection</li>
+                        <li>Contact admin if emails consistently delayed</li>
+                    </ul>
+
+                    <h3>Dashboard Issues</h3>
+
+                    <h4>Problem: Statistics not updating</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Refresh the page (Ctrl+R or Cmd+R)</li>
+                        <li>Clear browser cache</li>
+                        <li>Check internet connection</li>
+                        <li>Try a different browser</li>
+                    </ul>
+
+                    <h4>Problem: Charts not displaying</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Ensure JavaScript is enabled</li>
+                        <li>Disable browser extensions temporarily</li>
+                        <li>Clear browser cache and cookies</li>
+                        <li>Update browser to latest version</li>
+                    </ul>
+
+                    <h3>Data Export Issues</h3>
+
+                    <h4>Problem: Export not downloading</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check browser download settings</li>
+                        <li>Disable popup blocker temporarily</li>
+                        <li>Try a different browser</li>
+                        <li>Reduce date range if exporting large dataset</li>
+                        <li>Check available disk space</li>
+                    </ul>
+
+                    <h4>Problem: Excel file won't open</h4>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Ensure you have Excel or compatible software</li>
+                        <li>Download file again (may be corrupted)</li>
+                        <li>Try opening with Google Sheets or LibreOffice</li>
+                        <li>Use CSV export instead if Excel unavailable</li>
+                    </ul>
+
+                    <h3>Common Error Codes</h3>
+                    <table>
+                        <tr>
+                            <th>Error Code</th>
+                            <th>Meaning</th>
+                            <th>Solution</th>
+                        </tr>
+                        <tr>
+                            <td>400</td>
+                            <td>Bad Request - Invalid input</td>
+                            <td>Check form data and try again</td>
+                        </tr>
+                        <tr>
+                            <td>401</td>
+                            <td>Unauthorized - Not logged in</td>
+                            <td>Log in again, session may have expired</td>
+                        </tr>
+                        <tr>
+                            <td>403</td>
+                            <td>Forbidden - No permission</td>
+                            <td>Contact admin for access</td>
+                        </tr>
+                        <tr>
+                            <td>404</td>
+                            <td>Not Found - Page doesn't exist</td>
+                            <td>Check URL or navigate from menu</td>
+                        </tr>
+                        <tr>
+                            <td>429</td>
+                            <td>Too Many Requests - Rate limit</td>
+                            <td>Wait a few minutes before retrying</td>
+                        </tr>
+                        <tr>
+                            <td>500</td>
+                            <td>Server Error - System issue</td>
+                            <td>Contact admin, may be temporary</td>
+                        </tr>
+                    </table>
+
+                    <h3>Getting Help</h3>
+                    <div class="info-box">
+                        <strong>Support Resources:</strong>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li><strong>Admin Portal:</strong> Contact your system administrator</li>
+                            <li><strong>Email Issues:</strong> Check SMTP configuration</li>
+                            <li><strong>Technical Issues:</strong> Check browser console for errors (F12)</li>
+                            <li><strong>Feature Requests:</strong> Submit feedback through admin</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FAQ SECTION -->
+                <div class="section" id="faq">
+                    <div class="section-header">
+                        <h2>Frequently Asked Questions</h2>
+                    </div>
+
+                    <h3>General Questions</h3>
+
+                    <h4>Q: What browsers are supported?</h4>
+                    <p><strong>A:</strong> Accesium works best on modern browsers including:</p>
+                    <ul>
+                        <li>Google Chrome (recommended)</li>
+                        <li>Mozilla Firefox</li>
+                        <li>Microsoft Edge</li>
+                        <li>Safari (iOS/macOS)</li>
+                    </ul>
+                    <p>For QR scanning, Chrome provides the best camera support.</p>
+
+                    <h4>Q: Can I use Accesium on mobile devices?</h4>
+                    <p><strong>A:</strong> Not yet. Mobile support is planned for a future release.</p>
+
+                    <h4>Q: Is my data secure?</h4>
+                    <p><strong>A:</strong> Yes. Accesium implements industry-standard security measures including password hashing, CSRF protection, rate limiting, and secure session management. See the <a href="#security">Security Features</a> section for details.</p>
+
+                    <h4>Q: What happens if I forget my password?</h4>
+                    <p><strong>A:</strong> Contact your administrator at <strong>qrcodecode49@gmail.com</strong> to reset your password. See the detailed instructions in the <a href="#faq">User Questions</a> section below.</p>
+
+                    <h3>Admin Questions</h3>
+
+                    <h4>Q: How many admins can the system have?</h4>
+                    <p><strong>A:</strong> Multiple admins can be created. The first admin creates their account through signup, and additional admins can be added by existing admins.</p>
+
+                    <h4>Q: Can I customize the predefined locations?</h4>
+                    <p><strong>A:</strong> Currently, locations are predefined in the system configuration. Contact your developer to modify the location list.</p>
+
+                    <h4>Q: How do I reactivate a deleted user?</h4>
+                    <p><strong>A:</strong> Deleted users are permanently removed. You'll need to create a new account with a new QR code.</p>
+
+                    <h4>Q: Can I export attendance data for a specific user?</h4>
+                    <p><strong>A:</strong> Yes, use the search filter in Attendance Records to find the user, then export the filtered results.</p>
+
+                    <h3>User Questions</h3>
+
+                    <h4>Q: Why do I need to change my password on first login?</h4>
+                    <p><strong>A:</strong> This is a security measure. Temporary passwords sent by email should be changed immediately to ensure only you know your password.</p>
+
+                    <h4>Q: Can I have multiple QR codes?</h4>
+                    <p><strong>A:</strong> No, each user has one unique QR code. If your QR code is lost or damaged, contact admin for a replacement.</p>
+
+                    <h4>Q: What if I forget my password?</h4>
+                    <p><strong>A:</strong> Contact your administrator to reset your password:</p>
+                    <ol>
+                        <li>Send an email to: <strong>qrcodecode49@gmail.com</strong></li>
+                        <li>Use this format:
+                            <div class="code-block">
+                    Subject: Password Reset Request - [Your Name]
+
+                    Good day,
+
+                    I need to reset my password for the Accesium system.
+
+                    Username/Email: [Your login username or email]
+                    Full Name: [Your complete name]
+                    Reason: Forgot password
+
+                    Thank you.
+
+                    Best regards,
+                    [Your Name]
+                            </div>
+                        </li>
+                        <li>Wait for the administrator to generate a new temporary password</li>
+                        <li>Check your registered email for the new credentials</li>
+                        <li>Login and change your password immediately</li>
+                    </ol>
+
+                    <div class="warning-box">
+                        <strong>Security Note:</strong> For security purposes, the administrator can only send temporary passwords to your registered email address. Make sure to change it immediately upon login.
+                    </div>
+
+                    <h4>Q: What if I forget my PIN?</h4>
+                    <p><strong>A:</strong> Your PIN is displayed in your user dashboard under "My QR Code". You can always log in to retrieve it.</p>
+
+                    <h4>Q: How long do trusted devices stay trusted?</h4>
+                    <p><strong>A:</strong> Trusted devices remain active for 30 days from the date added. After that, you'll need to complete 2FA again.</p>
+
+                    <h3>Scanner Questions</h3>
+
+                    <h4>Q: Why doesn't exit require a PIN?</h4>
+                    <p><strong>A:</strong> For efficiency and faster processing, exit scans only require QR code verification. The system knows you're exiting based on your last action being IN.</p>
+
+                    <h4>Q: What if someone scans twice accidentally?</h4>
+                    <p><strong>A:</strong> The system tracks the last action. If you're already IN and scan again, it will log you OUT. Contact admin if there's an error in the logs.</p>
+
+                    <h4>Q: Can the scanner work offline?</h4>
+                    <p><strong>A:</strong> No, the scanner requires an internet connection to verify users and log access in real-time.</p>
+
+                    <h3>Technical Questions</h3>
+
+                    <h4>Q: Where is data stored?</h4>
+                    <p><strong>A:</strong> All data is stored in a SQLite database with proper encryption and security measures.</p>
+
+                    <h4>Q: Are QR codes encrypted?</h4>
+                    <p><strong>A:</strong> QR codes contain encoded tokens that are validated against the database. The actual data is not sensitive but the tokens are unique and secure.</p>
+
+                    <h4>Q: What timezone does the system use?</h4>
+                    <p><strong>A:</strong> All timestamps are stored in UTC and converted to Philippine Time (Asia/Manila) for display.</p>
+                </div>
+
+                <!-- BEST PRACTICES -->
+                <div class="section" id="best-practices">
+                    <div class="section-header">
+                        <h2>Best Practices</h2>
+                    </div>
+
+                    <h3>For Administrators</h3>
+                    <ul>
+                        <li><strong>Regular Backups:</strong> Export attendance data regularly (weekly/monthly)</li>
+                        <li><strong>User Audits:</strong> Periodically review user list and remove inactive accounts</li>
+                        <li><strong>Access Rules:</strong> Keep access rules simple and well-documented</li>
+                        <li><strong>Security Settings:</strong> Enable 2FA and account lockout for enhanced security</li>
+                        <li><strong>Password Policy:</strong> Remind users to use strong, unique passwords</li>
+                        <li><strong>Location Updates:</strong> Always set correct location before scanning sessions</li>
+                        <li><strong>Monitor Activity:</strong> Check recent logs daily for anomalies</li>
+                        <li><strong>Email Configuration:</strong> Ensure SMTP is properly configured for notifications</li>
+                    </ul>
+
+                    <h3>For Users</h3>
+                    <ul>
+                        <li><strong>Password Security:</strong> Never share your password or PIN</li>
+                        <li><strong>QR Code Care:</strong> Keep QR code clean and undamaged</li>
+                        <li><strong>Trusted Devices:</strong> Only mark personal devices as trusted</li>
+                        <li><strong>Session Timeout:</strong> Always logout when using shared computers</li>
+                        <li><strong>Profile Updates:</strong> Keep email address current for notifications</li>
+                        <li><strong>Regular Checks:</strong> Review your attendance records periodically</li>
+                        <li><strong>Report Issues:</strong> Notify admin immediately of scanning problems</li>
+                    </ul>
+
+                    <h3>For Scanner Operators</h3>
+                    <ul>
+                        <li><strong>Camera Maintenance:</strong> Clean camera lens regularly</li>
+                        <li><strong>Lighting:</strong> Ensure adequate lighting at scanning location</li>
+                        <li><strong>Monitor Display:</strong> Watch for error messages and anomalies</li>
+                        <li><strong>User Assistance:</strong> Help users position QR codes correctly</li>
+                        <li><strong>Location Verification:</strong> Confirm correct location is set</li>
+                        <li><strong>Browser Updates:</strong> Keep browser updated for best performance</li>
+                        <li><strong>Connection:</strong> Ensure stable internet connection</li>
+                    </ul>
+                </div>
+
+                <!-- SYSTEM REQUIREMENTS -->
+                <div class="section" id="requirements">
+                    <div class="section-header">
+                        <h2>System Requirements</h2>
+                    </div>
+
+                    <h3>Client Requirements</h3>
+                    <table>
+                        <tr>
+                            <th>Component</th>
+                            <th>Minimum</th>
+                            <th>Recommended</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Browser</strong></td>
+                            <td>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</td>
+                            <td>Latest version of Chrome</td>
+                        </tr>
+                        <tr>
+                            <td><strong>JavaScript</strong></td>
+                            <td>Enabled</td>
+                            <td>Enabled</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cookies</strong></td>
+                            <td>Enabled</td>
+                            <td>Enabled</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Screen Resolution</strong></td>
+                            <td>1024x768</td>
+                            <td>1920x1080</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Internet</strong></td>
+                            <td>512 Kbps</td>
+                            <td>5 Mbps+</td>
+                        </tr>
+                    </table>
+
+                    <h3>Scanner Requirements</h3>
+                    <ul>
+                        <li><strong>Camera:</strong> Built-in or USB webcam (720p minimum, 1080p recommended)</li>
+                        <li><strong>Browser Permissions:</strong> Camera access allowed</li>
+                        <li><strong>Lighting:</strong> Adequate ambient lighting (300+ lux recommended)</li>
+                        <li><strong>Display:</strong> Monitor or tablet for results display</li>
+                    </ul>
+
+                    <h3>Server Requirements</h3>
+                    <ul>
+                        <li><strong>Python:</strong> 3.8 or higher</li>
+                        <li><strong>Flask:</strong> Web framework</li>
+                        <li><strong>SQLite:</strong> Database (included)</li>
+                        <li><strong>SMTP Server:</strong> For email functionality (optional but recommended)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p><strong>Accesium QR Access Control System</strong></p>
+            <p>Complete Documentation - Version 1.0</p>
+            <p style="margin-top: 1rem; opacity: 0.7;">For technical support, contact your system administrator</p>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.sidebar a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight active section in navigation
+        window.addEventListener('scroll', () => {
+            let current = '';
+            document.querySelectorAll('.section').forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

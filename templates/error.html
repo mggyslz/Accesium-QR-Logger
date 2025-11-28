@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/assets/favicon.ico') }}"/>
+    <title>{{ error_title or 'Error' }}</title>
+    <link rel="stylesheet" href="/static/css/global.css" />
+  </head>
+  <body class="error-page">
+    <div class="error-container">
+      <div class="error-icon">⚠</div>
+      <h1>{{ error_title or 'An Error Occurred' }}</h1>
+      {% if error_code %}
+      <div class="error-code">Error Code: {{ error_code }}</div>
+      {% endif %}
+      <div class="error-message">
+        {{ error_message or 'Something went wrong. Please try again.' }}
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="window.location.reload()">
+          Refresh Page
+        </button>
+        <a href="/" class="btn btn-secondary"> Go to Home </a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
+    {{ inject_csrf_meta_tag()|safe }}
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/css/global.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header" style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="Logo" style="width:32px; height:32px;">
+                <div>
+                    <h2 style="margin:0;">Admin Panel</h2>
+                    <p style="margin:0;">Accesium</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" onclick="showSection(event, 'dashboard')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection(event, 'attendance')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Attendance Records</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection(event, 'users')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Registered Users</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection(event, 'analytics')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span>Analytics</span>
+                </a>
+                
+                <div style="margin: 16px 20px 8px 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">User Management</span>
+                </div>
+                
+                <a href="#" class="menu-item" onclick="showSection(event, 'trusted-devices')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                    <span>Trusted Devices</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection(event, 'security')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Security</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection(event, 'access-rules')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                    <span>Access Rules</span>
+                </a>
+                
+                <div style="margin: 16px 20px 8px 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <span style="font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">System</span>
+                </div>
+                
+                <a href="#" class="menu-item settings-item" onclick="showSection(event, 'settings')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-1.42 3.42h-.11a1.65 1.65 0 0 0-1.57 1.09 2 2 0 0 1-3.8 0A1.65 1.65 0 0 0 11 21.3h-.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-3.42-1.42v-.11A1.65 1.65 0 0 0 4.21 18a2 2 0 0 1 0-3.8A1.65 1.65 0 0 0 3.12 13H3a2 2 0 0 1 0-4h.12A1.65 1.65 0 0 0 4.2 7a2 2 0 0 1 3.42-1.42l.06.06A1.65 1.65 0 0 0 9.2 5.12V5a2 2 0 0 1 4 0v.12A1.65 1.65 0 0 0 14.8 6.2a2 2 0 0 1 3.42 1.42v.11A1.65 1.65 0 0 0 19.79 11a2 2 0 0 1-.39 4z">
+                        </path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <form method="POST" action="{{ url_for('auth.logout') }}" style="margin: 0;">
+                    {{ inject_csrf_input()|safe }}
+                    <button type="submit" class="menu-item logout-btn" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; font: inherit; display: flex; align-items: center; gap: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <div class="topbar-title">
+                        <h1 id="pageTitle">Dashboard</h1>
+                        <span class="security-indicator secure" id="securityStatus">Secure Connection</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="location-selector">
+                        <label>Active Location:</label>
+                        <select id="locationSelect" onchange="changeLocation()">
+                            {% for loc in locations %}
+                            <option value="{{ loc }}" {% if loc==active_location %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div id="section-dashboard">
+                <div class="welcome-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                        <div>
+                            <h2>Welcome back, Administrator {{ session.get('admin_name', session.get('admin_username', 'Administrator')).split()[0] }}!</h2>
+                            <p>Monitor system activity and manage access control.</p>
+                        </div>
+
+                        <div style="text-align: right; margin-left: 20px;">
+                            <div class="activity-label">Last Activity</div>
+                            <div id="lastActivityTime" style="font-size: 16px; font-weight: 600; color: #333;">
+                                Just now
+                            </div>
+                            <div id="lastActivityAction" style="font-size: 12px; color: #999; margin-top: 2px;">
+                                No recent activity
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card" id="statCardInside">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon icon-inside">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content">
+                                <label>Currently Inside</label>
+                            </div>
+                        </div>
+                        <div class="value" id="totalInsideCount">{{ total_inside }}</div>
+                    </div>
+                    
+                    <div class="stat-card" id="statCardUsers">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon icon-users">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content">
+                                <label>Total Users</label>
+                            </div>
+                        </div>
+                        <div class="value">{{ users|length }}</div>
+                    </div>
+                    
+                    <div class="stat-card" id="statCardLocation">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon icon-location">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content">
+                                <label>Active Location</label>
+                            </div>
+                        </div>
+                        <div class="value" style="font-size: 20px;">{{ active_location }}</div>
+                    </div>
+                    
+                    <div class="stat-card" id="statCardSecurity">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon icon-security">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content">
+                                <label>Security Status</label>
+                            </div>
+                        </div>
+                        <div class="value" style="font-size: 16px;" id="securityOverview">Protected</div>
+                    </div>
+                </div>
+
+                    <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600;">Currently Inside</h3>
+                    <div class="card">
+                        <div class="table-container" style="max-height: 350px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Entry Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="currentInsideBody">
+                                    {% for user in current_inside %}
+                                    <tr>
+                                        <td><strong>{{ user[1] }}</strong></td>
+                                        <td>{{ user[2] }}</td>
+                                        <td>{{ user[3] }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="3" class="empty-state">No one currently inside</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600;">Recent Activity</h3>
+                    <div class="card">
+                        <div class="table-container" style="max-height: 350px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Action</th>
+                                        <th>Time</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentLogsBody">
+                                    {% for log in recent_logs %}
+                                    <tr>
+                                        <td><strong>{{ log[1] }}</strong></td>
+                                        <td><span class="badge {% if log[2] == 'IN' %}badge-in{% elif log[2] == 'OUT' %}badge-out{% endif %}">{{ log[2] }}</span></td>
+                                        <td>{{ log[3] }}</td>
+                                        <td>{{ log[4] }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="empty-state">No recent logs</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-attendance" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Attendance Records</h3>
+                    <div class="card">
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="exportAttendanceExcel()">Export to Excel</button>
+                            <button class="btn btn-secondary" onclick="window.location.href='{{ url_for('admin.export_logs') }}'">Download CSV</button>
+                        </div>
+                        <div class="filters">
+                            <input type="text" id="searchAttendance" placeholder="Search by name...">
+                            <input type="date" id="filterDateFrom">
+                            <span style="color: #999;">to</span>
+                            <input type="date" id="filterDateTo">
+                            <select id="filterAction">
+                                <option value="">All Actions</option>
+                                <option value="IN">IN Only</option>
+                                <option value="OUT">OUT Only</option>
+                            </select>
+                            <select id="filterLocation">
+                                <option value="">All Locations</option>
+                            </select>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Log ID</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Action</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTbody">
+                                    <tr>
+                                        <td colspan="7" class="empty-state">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <button id="prevBtn" onclick="loadAttendance(currentPage - 1)">Previous</button>
+                            <span class="page-info" id="pageInfo">Page 1</span>
+                            <button id="nextBtn" onclick="loadAttendance(currentPage + 1)">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-users" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Add New User</h3>
+                    <div class="card">
+                        <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                            Create a new user account
+                        </p>
+                        <form id="addUserForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px;">Email *</label>
+                                <input type="email" id="add_email" placeholder="user@example.com" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px;">Full Name *</label>
+                                <input type="text" id="add_name" placeholder="Full Name" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px;">Role *</label>
+                                <select id="add_role" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px; background: white;">
+                                    <option value="Staff">Staff</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Student">Student</option>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Visitor">Visitor</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px;">
+                                    Create User
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Registered Users</h3>
+                    <div class="card">
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="window.location.href='{{ url_for('admin.export_logs') }}'">Download CSV</button>
+                        </div>
+                        <div class="filters">
+                            <input type="text" id="searchInput" placeholder="Search by name or role...">
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>QR Code</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTbody">
+                                    {% for u in users %}
+                                    <tr data-name="{{ u[2]|lower }}" data-role="{{ u[3]|lower }}">
+                                        <td>{{ u[0] }}</td>
+                                        <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:12px;">{{ u[1] }}</code></td>
+                                        <td><strong>{{ u[2] }}</strong></td>
+                                        <td>{{ u[3] }}</td>
+                                        <td style="font-size: 13px; color: #666;">{{ u[4] if u[4] else 'No email' }}</td>
+                                        <td>{{ u[5] }}</td>
+                                        <td>
+                                            {% if u|length > 6 and u[6] %}
+                                            <img src="{{ url_for('static', filename='qrcodes/' ~ u[6]) }}" alt="QR Code" class="qr" onerror="this.src='{{ url_for('static', filename='img/no_qr.png') }}'">
+                                            <br>
+                                            <a href="{{ url_for('static', filename='qrcodes/' ~ u[6]) }}" download="{{ u[2]|replace(' ', '_') ~ '_QR.png' }}" style="font-size:12px;color:#666;">Download</a>
+                                            {% else %}
+                                            <img src="{{ url_for('static', filename='img/no_qr.png') }}" alt="No QR" class="qr">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-secondary" onclick="resetUserPassword({{ u[0] }}, '{{ u[2] }}', '{{ u[4] if u[4] else '' }}')" style="margin-right: 8px;">
+                                                Reset Password
+                                            </button>
+                                            <button class="btn btn-danger" onclick="deleteUser({{ u[0] }})">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="8" class="empty-state">No users found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <button id="prevUserBtn" onclick="loadUsers(currentUserPage - 1)">Previous</button>
+                            <span class="page-info" id="userPageInfo">Page 1</span>
+                            <button id="nextUserBtn" onclick="loadUsers(currentUserPage + 1)">Next</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="section-analytics" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Activity - Last 7 Days</h3>
+                    <div class="card">
+                        <div class="chart-container">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Activity - Today (Hourly)</h3>
+                    <div class="card">
+                        <div class="chart-container">
+                            <canvas id="hourlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-trusted-devices" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Trusted Devices</h3>
+                    <div class="card">
+                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px;text-align: right;">Manage devices that can skip two-factor authentication</p>
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+                        <div class="info-box">
+                            <p>
+                                <strong>About Trusted Devices:</strong><br>
+                                Devices marked as trusted will skip 2FA for 30 days. Only trust personal devices. You can remove any device at any time to require 2FA again.
+                            </p>
+                        </div>
+                        {% if devices %}
+                        {% for device in devices %}
+                        <div class="device-card">
+                            <div class="device-info">
+                                <div class="device-name">{{ device[1] }}</div>
+                                <div class="device-details">
+                                    <div><strong>IP Address:</strong> {{ device[2] }}</div>
+                                    <div><strong>Added:</strong> {{ device[3] }}</div>
+                                    <div><strong>Last Used:</strong> {{ device[4] }}</div>
+                                    <div><strong>Expires:</strong> {{ device[5] }}</div>
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ url_for('auth.remove_device', device_id=device[0]) }}" style="margin: 0;">
+                                {{ inject_csrf_input()|safe }}
+                                <button type="submit" class="btn-remove" onclick="return confirm('Remove this trusted device?')">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="no-devices">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <p>No trusted devices yet</p>
+                            <p class="note">Check "Remember this device" during 2FA to add one</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="section-security" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Security Dashboard</h3>
+                    <div class="card">
+                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Monitor security events and settings</p>
+                        <div class="info-box">
+                            <p>
+                                <strong>Security Status:</strong> All systems operational<br>
+                            </p>
+                        </div>
+                        
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Recent Security Events</h3>
+                        <div class="card" style="margin-top: 0;">
+                            <div class="card-actions">
+                                <button class="btn btn-secondary" onclick="refreshSecurityLogs()">Refresh</button>
+                            </div>
+                            <div class="security-audit-log" id="securityAuditLog">
+                                {% for event in security_events %}
+                                <div class="audit-entry">
+                                    <div class="audit-time">{{ event.timestamp }}</div>
+                                    <div class="audit-action">{{ event.action }}</div>
+                                    <div class="audit-user">{{ event.user }}</div>
+                                    <div class="audit-details">{{ event.details }}</div>
+                                </div>
+                                {% else %}
+                                <div class="empty-state">No security events to display</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="section-access-rules" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Access Control Rules</h3>
+                    <div class="card">
+                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Manage whitelist/blacklist rules for users</p>
+                        
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Add New Rule</h3>
+                        <div class="card" style="margin-bottom: 24px; border: 1px solid #e5e5e5;">
+                            <form id="addRuleForm" style="padding: 20px;">
+                                <!-- User Selection Section -->
+                                <div class="user-selection-section">
+                                    <div class="selection-controls">
+                                        <!-- Search Bar -->
+                                        <div class="search-bar-container">
+                                            <input type="text" 
+                                                id="userSearchInput" 
+                                                placeholder=" Search by name, email, or ID..." 
+                                                class="search-input">
+                                        </div>
+                                        
+                                        <!-- Role Filters -->
+                                        <div class="role-filters">
+                                            <label>Filter by Role:</label>
+                                            <label class="role-filter-label">
+                                                <input type="checkbox" class="role-filter-checkbox" value="Staff" checked>
+                                                <span>Staff</span>
+                                            </label>
+                                            <label class="role-filter-label">
+                                                <input type="checkbox" class="role-filter-checkbox" value="Employee" checked>
+                                                <span>Employee</span>
+                                            </label>
+                                            <label class="role-filter-label">
+                                                <input type="checkbox" class="role-filter-checkbox" value="Student" checked>
+                                                <span>Student</span>
+                                            </label>
+                                            <label class="role-filter-label">
+                                                <input type="checkbox" class="role-filter-checkbox" value="Teacher" checked>
+                                                <span>Teacher</span>
+                                            </label>
+                                            <label class="role-filter-label">
+                                                <input type="checkbox" class="role-filter-checkbox" value="Visitor" checked>
+                                                <span>Visitor</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Bulk Controls -->
+                                        <div class="bulk-controls">
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllUsers()">
+                                                ✓ Select All
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAllUsers()">
+                                                ✕ Clear Selection
+                                            </button>
+                                            <span class="selected-indicator">
+                                                <span id="selectedUserCount" style="display: none;">0</span>
+                                                <span> selected</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- User List -->
+                                    <div id="userSelectionList" class="user-selection-list">
+                                        <div class="empty-state" style="padding: 20px;">Loading users...</div>
+                                    </div>
+                                </div>
+
+                                <!-- Rule Configuration -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 2px solid #e5e5e5;">
+                                    <div class="form-group">
+                                        <label>Rule Type *</label>
+                                        <select id="rule_type" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                            <option value="whitelist">✓ Whitelist (Only Allow)</option>
+                                            <option value="blacklist">✕ Blacklist (Deny)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Location</label>
+                                        <select id="rule_location" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                            <option value="">Any Location</option>
+                                            {% for loc in locations %}
+                                            <option value="{{ loc }}">{{ loc }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Time From</label>
+                                        <input type="time" id="rule_time_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Time To</label>
+                                        <input type="time" id="rule_time_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date From</label>
+                                        <input type="date" id="rule_date_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date To</label>
+                                        <input type="date" id="rule_date_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Specific Dates (comma-separated)</label>
+                                        <input type="text" 
+                                            id="rule_specific_dates" 
+                                            placeholder="2025-01-15, 2025-01-20" 
+                                            style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Submit Button -->
+                                <div style="margin-top: 20px;">
+                                    <button type="submit" class="btn btn-primary" id="bulkAddRuleBtn" style="padding: 12px 24px; font-size: 14px;">
+                                        Add Rule(s)
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Rest of access rules section (rules list table) stays the same -->
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Access Rules List</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Type</th>
+                                        <th>Location</th>
+                                        <th>Time Range</th>
+                                        <th>Date Range</th>
+                                        <th>Specific Dates</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rulesTableBody">
+                                    <tr>
+                                        <td colspan="9" class="empty-state">Loading rules...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-settings" class="section-hidden">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">System Settings</h3>
+                    <div class="card">
+                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Manage system configuration and preferences</p>
+
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Appearance</h3>
+                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
+                            <div class="dark-mode-toggle">
+                                <div class="dark-mode-toggle-label">
+                                    <strong>Dark Mode</strong>
+                                    <span>Switch between light and dark theme</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Change Password</h3>
+                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
+                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                                Update your admin account password
+                            </p>
+                            <form id="changePasswordForm" style="max-width: 500px;">
+                                <div class="form-group">
+                                    <label>Current Password *</label>
+                                    <input type="password" id="current_password" required placeholder="Enter current password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password *</label>
+                                    <input type="password" id="new_password" required placeholder="Enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    <div class="password-strength" id="passwordStrength" style="display: none; margin-top: 8px;">
+                                        <div class="strength-bar">
+                                            <div class="strength-fill" id="strengthFill"></div>
+                                        </div>
+                                        <div class="strength-text" id="strengthText"></div>
+                                    </div>
+                                    <ul class="password-requirements" style="margin-top: 8px;">
+                                        <li id="req-length">At least 8 characters</li>
+                                        <li id="req-letter">Contains at least one letter</li>
+                                        <li id="req-special">Contains a number or special character</li>
+                                    </ul>
+                                </div>
+                                <div class="form-group">
+                                    <label>Confirm New Password *</label>
+                                    <input type="password" id="confirm_password" required placeholder="Re-enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    <!-- Match Indicator -->
+                                    <div class="match-indicator" id="matchIndicator" style="display: none; margin-top: 8px;">
+                                        <span class="match-icon" id="matchIcon"></span>
+                                        <span id="matchText"></span>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
+                                    Change Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Security Settings</h3>
+                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
+                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                                These settings apply to BOTH admin and user accounts
+                            </p>
+                            
+                            <div class="settings-grid">
+                                <!-- Session Management -->
+                                <div class="setting-group">
+                                    <h4>Session Management</h4>
+                                    <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                                        Control how long users stay logged in
+                                    </p>
+                                    <div class="form-group">
+                                        <label for="sessionTimeout">Session Timeout</label>
+                                        <select id="sessionTimeout" class="form-control">
+                                            <option value="15">15 minutes</option>
+                                            <option value="30" selected>30 minutes</option>
+                                            <option value="60">1 hour</option>
+                                            <option value="120">2 hours</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="updateSessionSettings()">Update Settings</button>
+                                </div>
+                                
+                                <!-- Login Security -->
+                                <div class="setting-group">
+                                    <h4>Login Security</h4>
+                                    <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                                        Configure authentication requirements
+                                    </p>
+                                    
+                                    <!-- 2FA Setting -->
+                                    <div class="checkbox-group" style="margin-bottom: 12px;">
+                                        <input type="checkbox" id="enable2FA" checked>
+                                        <label for="enable2FA">
+                                            <strong>Require 2FA for all accounts</strong>
+                                            <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
+                                            </span>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Lockout Policy -->
+                                    <div class="checkbox-group" style="margin-bottom: 12px;">
+                                        <input type="checkbox" id="lockoutPolicy" checked>
+                                        <label for="lockoutPolicy">
+                                            <strong>Enable account lockout</strong>
+                                            <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
+                                                Lock accounts after <strong id="lockoutThresholdDisplay">5</strong> failed attempts
+                                            </span>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Lockout Threshold (Optional) -->
+                                    <div class="form-group" style="display: none;" id="lockoutThresholdGroup">
+                                        <label for="lockoutThreshold">Failed Attempts Threshold</label>
+                                        <select id="lockoutThreshold" class="form-control" onchange="updateLockoutThresholdDisplay()">
+                                            <option value="3">3 attempts</option>
+                                            <option value="5" selected>5 attempts</option>
+                                            <option value="7">7 attempts</option>
+                                            <option value="10">10 attempts</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary" onclick="updateLoginSecurity()">Update Settings</button>
+                                    
+                                    <!-- Status Indicator -->
+                                    <div id="securitySettingsStatus" style="margin-top: 12px; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
+                                        <!-- Dynamic status messages will appear here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Admin Management</h3>
+                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;" id="adminManagementCard">
+                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right; ">
+                                Manage administrator accounts (First Admin Only)
+                            </p>
+                            {% if is_first_admin %}
+                            <form id="addAdminForm" style="padding: 20px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                    <div class="form-group">
+                                        <label>Username *</label>
+                                        <input type="text" id="admin_username" required placeholder="Choose username" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email *</label>
+                                        <input type="email" id="admin_email" required placeholder="admin@example.com" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Full Name *</label>
+                                        <input type="text" id="admin_name" required placeholder="Full Name" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password *</label>
+                                        <input type="password" id="admin_password" required placeholder="Set password" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                </div>
+                                <div style="margin-top: 16px;">
+                                    <button type="submit" class="btn btn-primary">
+                                        Create Admin Account
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="adminListContainer">
+                            <div class="table-container" style="margin-top: 20px;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Created</th>
+                                            <th>Status</th>
+                                            <th>Actions</th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminListBody">
+                                        <tr>
+                                            <td colspan="7" class="empty-state">Loading admin list...</td> 
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            </div>
+                            {% else %}
+                            <div style="padding: 20px; text-align: center;">
+                                <p style="color: #666; font-style: italic;">
+                                     Only the first administrator can manage admin accounts.
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="sessionTimeoutWarning" class="section-hidden">
+        <div class="overlay" onclick="document.getElementById('sessionTimeoutWarning').classList.add('section-hidden')">
+        </div>
+        <div class="session-timeout-warning">
+            <h3>Session About to Expire</h3>
+            <p>Your session will expire in <span id="countdown">2:00</span> minutes due to inactivity.</p>
+            <p>Would you like to extend your session?</p>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="extendSession()">Extend Session</button>
+                <button class="btn btn-secondary" onclick="logoutUser()">Logout</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const CHART_LABELS = {{ chart_labels|tojson }};
+        const CHART_INS = {{ chart_ins|tojson }};
+        const CHART_OUTS = {{ chart_outs|tojson }};
+        const HOURLY_LABELS = {{ hourly_labels|tojson }};
+        const HOURLY_INS = {{ hourly_ins|tojson }};
+        const HOURLY_OUTS = {{ hourly_outs|tojson }};
+        window.isFirstAdmin = {{ 'true' if is_first_admin else 'false' }};
+
+        const API_URLS = {
+            addUser: "{{ url_for('admin.add_user_by_admin_route') }}",
+            setLocation: "{{ url_for('admin.set_location') }}",
+            getAttendance: "{{ url_for('admin.get_attendance') }}",
+            exportAttendanceExcel: "{{ url_for('admin.export_attendance_excel') }}",
+            exportLogs: "{{ url_for('admin.export_logs') }}",
+            deleteUser: "{{ url_for('admin.delete_user_route', user_id=0) }}",
+            addAccessRule: "{{ url_for('admin.add_access_rule') }}",
+            getAccessRules: "{{ url_for('admin.get_access_rules_data') }}",
+            deleteAccessRule: "{{ url_for('admin.delete_access_rule_route', rule_id=0) }}",
+            toggleAccessRule: "{{ url_for('admin.toggle_access_rule', rule_id=0) }}",
+            authLogout: "{{ url_for('auth.logout') }}",
+            userLogin: "{{ url_for('user.login_page') }}",
+            authLogin: "{{ url_for('auth.login_page') }}",
+            stats: "{{ url_for('admin.stats') }}",
+            removeDevice: "{{ url_for('auth.remove_device', device_id=0) }}",
+            resendCode: "{{ url_for('auth.resend_code') }}",
+            extendSession: "{{ url_for('auth.extend_session') }}",
+            searchUsers: "{{ url_for('admin.search_users') }}",
+            bulkAddAccessRules: "{{ url_for('admin.bulk_add_access_rules') }}",
+            changePassword: "{{ url_for('admin.change_password') }}",
+            getSystemSettings: "{{ url_for('admin.get_system_settings') }}",
+            updateSessionSettings: "{{ url_for('admin.update_session_settings') }}",
+            updateLoginSecurity: "{{ url_for('admin.update_login_security') }}",
+            deleteAdmin: "{{ url_for('admin.delete_admin_route', admin_id=0) }}",   
+            addAdmin: "{{ url_for('admin.add_admin_route') }}",
+            getAdminList: "{{ url_for('admin.get_admin_list') }}"
+        };
+
+        function updateLockoutThresholdDisplay() {
+            const threshold = document.getElementById('lockoutThreshold').value;
+            const display = document.getElementById('lockoutThresholdDisplay');
+            if (display) {
+                display.textContent = threshold;
+            }
+        }
+    </script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

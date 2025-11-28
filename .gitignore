@@ -1,0 +1,56 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---- Virtual environments ----
+venv/
+.env/
+.env.bak/
+env/
+.venv/
+
+# ---- System files ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE / Editor files ----
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ---- Logs and local data ----
+*.log
+logs/
+debug/
+tmp/
+
+# ---- Database ----
+*.db
+*.sqlite3
+*.sqlite
+
+# ---- QR Code images (correct path) ----
+static/qrcodes/
+
+# ---- Reports / Exports (correct path) ----
+static/exports/
+*.csv
+
+# ---- Credentials / Secrets ----
+config/settings_local.py
+config/.env
+.env
+.env.local
+.env.dev
+.env.prod
+secrets.json
+*.key
+*.pem
+
+# ---- Build / Distribution ----
+build/
+dist/
+*.egg-info/

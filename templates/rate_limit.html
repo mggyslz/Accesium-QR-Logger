@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/assets/favicon.ico') }}"/>
+    <title>Rate Limit Reached</title>
+    <link rel="stylesheet" href="/static/css/global.css" />
+  </head>
+
+  <body class="error-page">
+    <div class="error-container">
+
+      <!-- ICON (Clock / limit icon) -->
+      <div class="error-icon">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+
+      <h1>Too Many Requests</h1>
+
+      <div class="error-code">Error Code: 429</div>
+
+      <div class="error-message">
+        You are sending requests too quickly.<br />
+        Please slow down and try again in a moment.
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="window.location.reload()">
+          Retry
+        </button>
+        <a href="/" class="btn btn-secondary">Go to Home</a>
+      </div>
+
+    </div>
+  </body>
+</html>

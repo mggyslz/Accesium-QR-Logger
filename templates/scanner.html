@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Scanner</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='/assets/favicon.ico') }}"/>
+    <!-- Add CSRF Meta Tag -->
+    {{ inject_csrf_meta_tag()|safe }}
+    <link rel="stylesheet" href="/static/css/global.css" />
+  </head>
+  <body class="scanner-page">
+    <div class="scanner-container">
+      <div class="video-section">
+        <div class="scan-frame">
+          <video id="preview" autoplay></video>
+          <div class="corner-frame corner-tl"></div>
+          <div class="corner-frame corner-tr"></div>
+          <div class="corner-frame corner-bl"></div>
+          <div class="corner-frame corner-br"></div>
+        </div>
+        <p class="scan-instruction">Position QR code in camera view</p>
+      </div>
+      <div class="info-section">
+        <div
+          class="scanner-header"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-align: center;
+          "
+        >
+          <img
+            src="{{ url_for('static', filename='assets/favicon.ico') }}"
+            alt="Logo"
+            style="width: 60px; height: 60px"
+          />
+          <div>
+            <h1 style="margin: 0">Accesium</h1>
+            <p class="subtitle" style="margin: 0">SCANNER READY</p>
+          </div>
+        </div>
+        <div class="status-box">
+          <div class="status-label">STATUS</div>
+          <div id="result">Ready to scan</div>
+        </div>
+        <div id="stats">
+          <div class="stat-box">
+            <div class="stat-number" id="totalInside">0</div>
+            <div class="stat-label">CURRENTLY INSIDE</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="todayScans">0</div>
+            <div class="stat-label">SCANS TODAY</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script src="/static/js/scanner.js"></script>
+  </body>
+</html>
