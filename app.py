@@ -24,7 +24,7 @@ except ImportError:
         sse_bp = None
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.environ.get('SECRET_KEY')
 if not app.secret_key:
     raise RuntimeError("SECRET_KEY is missing. Set it in your .env file.")
 
