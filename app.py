@@ -224,44 +224,6 @@ def unauthorized(e):
 
 
 if __name__ == "__main__":
-    use_https = os.getenv('USE_HTTPS', 'false').lower() == 'true'
-    if use_https:
-        import ssl
-        cert_file = 'cert.pem'
-        key_file = 'key.pem'
-        if not os.path.exists(cert_file) or not os.path.exists(key_file):
-            print("HTTPS enabled but certificates not found!")
-            exit(1)
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(cert_file, key_file)
-        app.run(debug=True, host="0.0.0.0", port=5000, ssl_context=context)
-    else:
-        app.run(debug=True, host="0.0.0.0", port=5000)
-
-
-# Design / Color Scheme
-# - dark/light mode toggle
-
-# - make the time 24 hour format consistent across the app
-
-# Documentation
-# - short setup guide and basic usage notes
-# - brief explanation of database schema and routes
-# - how to enable 2FA and whitelist configuration
-# - future improvement notes (API, notifications, etc.)
-
-
-"""
-In case of database deletion and re-initialization:
-
-python -m core.init_db
-
-pip install flask-limiter
-
-http://localhost:5000/user/signup
-http://localhost:5000/user/dashboard
-http://localhost:5000/user/
-"""
-
-'''idea project: AI-powered face identification with description and conversation log'''
+    # Production (Railway/Render) auto-handles HTTPS
+    app.run(host="0.0.0.0", port=5000)
 
