@@ -13,7 +13,7 @@ from apps.routes_auth import auth_bp
 from apps.routes_scanner import scanner_bp
 from apps.routes_user import user_bp
 
-# Check if routes_sse exists in apps folder, otherwise try root folder
+# Check if routes_sse exists
 try:
     from apps.routes_sse import sse_bp
 except ImportError:
@@ -28,7 +28,7 @@ app.secret_key = os.environ.get('SECRET_KEY')
 if not app.secret_key:
     raise RuntimeError("SECRET_KEY is missing. Set it in your .env file.")
 
-# Initialize Flask-Limiter
+# ---- Rate Limiter ----
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
@@ -36,23 +36,22 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-# Session configuration
+# ---- Session Config ----
 app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
-# CSRF configuration - MUST be before CSRFProtect initialization
+# ---- CSRF Config ----
 app.config['WTF_CSRF_TIME_LIMIT'] = None
 app.config['WTF_CSRF_SSL_STRICT'] = False
 
 csrf = CSRFProtect(app)
 
-# Properly exempt scanner and SSE blueprints from CSRF protection
 csrf.exempt(scanner_bp)
 if sse_bp:
-    csrf.exempt(sse_bp)  # Exempt SSE from CSRF (it's read-only)
+    csrf.exempt(sse_bp)
 
 from core.csrf_utils import inject_csrf_meta_tag, inject_csrf_input
 
@@ -62,44 +61,29 @@ def inject_csrf_helpers():
                 inject_csrf_meta_tag=inject_csrf_meta_tag,
                 inject_csrf_input=inject_csrf_input)
 
-@app.before_request
-def force_https():
-    # Skip HTTPS force in local dev
-    if request.host.startswith(('localhost', '127.0.0.1')):
-        return None
-    
-    # Railway sets X-Forwarded-Proto correctly
-    forwarded_proto = request.headers.get('X-Forwarded-Proto', 'http')
-
-    # Allow scanner/SSE in HTTP for local dev + avoid breaking them
-    if request.blueprint in ['scanner', 'sse']:
-        return None
-
-    # IF NOT HTTPS in real deployment → redirect
-    if forwarded_proto != 'https':
-        secure_url = request.url.replace('http://', 'https://', 1)
-        return redirect(secure_url, code=301)
-
+# -------------------------
+# HTTPS FORCE REMOVED HERE
+# -------------------------
 
 @app.after_request
 def set_security_headers(response):
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+
     response.headers.update({
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'SAMEORIGIN',
         'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'strict-origin-when-cross-origin'
     })
-    
-    # More permissive CSP for SSE
+
     csp = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https:; "
         "font-src 'self' data:; "
-        "connect-src 'self' blob:; "  # Added blob: for SSE
+        "connect-src 'self' blob:; "
         "media-src 'self' blob:; "
         "frame-ancestors 'self';"
     )
@@ -133,6 +117,7 @@ def validate_session():
         if 'admin_id' not in session or not session.get('admin_name'):
             session.clear()
             return redirect('/login')
+
     elif request.path.startswith('/user/') and request.path != '/user/':
         if 'user_id' not in session or not session.get('username'):
             session.clear()
@@ -140,7 +125,7 @@ def validate_session():
 
     return None
 
-# Register blueprints
+# ---- Register Blueprints ----
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(scanner_bp, url_prefix="/scanner")
@@ -148,33 +133,27 @@ app.register_blueprint(user_bp, url_prefix="/user")
 if sse_bp:
     app.register_blueprint(sse_bp, url_prefix="/sse")
 
-# Apply rate limits to blueprints - EXEMPT SSE FROM RATE LIMITING
+# ---- Rate Limits ----
 limiter.limit("100 per minute")(admin_bp)
 limiter.limit("150 per minute")(user_bp)
 limiter.limit("30 per minute")(auth_bp)
 limiter.limit("200 per minute")(scanner_bp)
 
-# Explicitly exempt SSE routes from rate limiting
 if sse_bp:
     limiter.exempt(sse_bp)
 
 @app.errorhandler(429)
 def rate_limit_handler(e):
-    """Handle rate limit errors for both HTML and JSON requests"""
-    if request.path.startswith(('/admin/', '/user/')) or \
-       request.blueprint in ['admin', 'user']:
-        # For admin/user pages, show the rate limit HTML page
+    if request.path.startswith(('/admin/', '/user/')) or request.blueprint in ['admin', 'user']:
         return render_template("rate_limit.html"), 429
-    
-    # For API/JSON requests, return JSON response
+
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
-            'status': 'error', 
+            'status': 'error',
             'message': 'Rate limit exceeded. Please slow down and try again later.',
             'code': 429
         }), 429
-    
-    # Default fallback
+
     return render_template("rate_limit.html"), 429
 
 @app.route("/rate-limit")
@@ -205,8 +184,10 @@ def serve_qr(filename):
 def health_check():
     from core.email_utils import is_smtp_configured
     is_authenticated = 'admin_id' in session or 'user_id' in session
+
     if request.args.get('check_auth') == 'true' and not is_authenticated:
         return jsonify({"status": "unauthorized"}), 401
+
     return jsonify({
         "status": "healthy",
         "authenticated": is_authenticated,
@@ -221,7 +202,13 @@ def health_check():
 def handle_csrf_error(e):
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'status': 'error', 'message': 'CSRF token validation failed.', 'reason': str(e.description)}), 400
-    return render_template('error.html', error_title='Security Error', error_message='CSRF token validation failed.', error_code=400), 400
+
+    return render_template(
+        'error.html',
+        error_title='Security Error',
+        error_message='CSRF token validation failed.',
+        error_code=400
+    ), 400
 
 @app.errorhandler(401)
 def unauthorized(e):
@@ -232,9 +219,6 @@ def unauthorized(e):
         return redirect('/user/')
     return render_template('error.html', error_title='Unauthorized', error_message='Please log in.', error_code=401), 401
 
-
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-

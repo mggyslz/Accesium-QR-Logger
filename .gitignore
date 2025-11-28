@@ -28,9 +28,12 @@ debug/
 tmp/
 
 # ---- Database ----
-*.db
+# Ignore all DBs EXCEPT the main app database
 *.sqlite3
 *.sqlite
+
+# Allow your real DB to be included
+!data/security_app.db
 
 # ---- QR Code images (correct path) ----
 static/qrcodes/

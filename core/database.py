@@ -20,10 +20,6 @@ def generate_random_pin(length: int = 6) -> str:
     return ''.join(secrets.choice(string.digits) for _ in range(length))
 
 def get_conn():
-    import sys
-    sys.stderr.write(f"🔥 DEBUG — DB PATH = {DB_PATH}\n")
-    sys.stderr.flush()
-
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute("PRAGMA foreign_keys = ON;")
@@ -32,7 +28,6 @@ def get_conn():
         from core.error_utils import log_error
         log_error(e, "Opening database connection")
         raise
-
 
 
 def get_utc_now():
