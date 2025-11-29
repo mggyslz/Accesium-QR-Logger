@@ -316,7 +316,6 @@ def export_attendance_excel():
         
         query = """
             SELECT 
-                l.log_id AS 'Log ID',
                 u.name AS 'Name',
                 u.role AS 'Role',
                 l.action AS 'Action',
@@ -326,6 +325,7 @@ def export_attendance_excel():
             JOIN users u ON l.user_id = u.user_id
             WHERE 1=1
         """
+
         params = []
         if date_from:
             query += " AND DATE(l.timestamp) >= ?"
@@ -371,7 +371,7 @@ def export_attendance_excel():
         if 'Timestamp' in df.columns:
             df['Timestamp'] = df['Timestamp'].apply(lambda x: utc_to_ph_time(x) if pd.notna(x) else '')
             df[['Date', 'Time']] = df['Timestamp'].str.split(' ', n=1, expand=True)
-            df = df[['Log ID', 'Name', 'Role', 'Action', 'Date', 'Time', 'Location']]
+            df = df[['Name', 'Role', 'Action', 'Date', 'Time', 'Location']]
         df['Location'] = df['Location'].fillna('Gate')
 
         df_in = df[df['Action'] == 'IN'].copy()

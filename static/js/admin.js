@@ -250,7 +250,7 @@ async function loadUsers(page = 1) {
         tbody.innerHTML = '';
         
         if (pageUsers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found</td></tr>';
         } else {
             pageUsers.forEach(user => {
                 const tr = document.createElement('tr');
@@ -270,7 +270,6 @@ async function loadUsers(page = 1) {
                 }
                 
                 tr.innerHTML = `
-                    <td>${user.user_id}</td>
                     <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:12px;">${user.username}</code></td>
                     <td><strong>${user.name}</strong></td>
                     <td>${user.role}</td>
@@ -295,7 +294,7 @@ async function loadUsers(page = 1) {
         
     } catch (err) {
         console.error('Failed to load users:', err);
-        document.getElementById('usersTbody').innerHTML = `<tr><td colspan="8" class="empty-state">Error loading users: ${err.message}</td></tr>`;
+        document.getElementById('usersTbody').innerHTML = `<tr><td colspan="7" class="empty-state">Error loading users: ${err.message}</td></tr>`;
     } finally {
         isLoadingUsers = false;
     }
@@ -306,13 +305,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const userRows = document.querySelectorAll('#usersTbody tr[data-name]');
     allUsersCache = Array.from(userRows).map(row => {
         const cells = row.querySelectorAll('td');
+        
+        // Extract user_id from the delete button's onclick attribute
+        const deleteBtn = row.querySelector('button.btn-danger');
+        const onclickAttr = deleteBtn ? deleteBtn.getAttribute('onclick') : '';
+        const userIdMatch = onclickAttr.match(/deleteUser\((\d+)\)/);
+        const userId = userIdMatch ? parseInt(userIdMatch[1]) : 0;
+        
         return {
-            user_id: parseInt(cells[0].textContent),
-            username: cells[1].textContent.trim(),
-            name: cells[2].textContent.trim(),
-            role: cells[3].textContent.trim(),
-            email: cells[4].textContent.trim(),
-            status: cells[5].textContent.trim(),
+            user_id: userId,
+            username: cells[0].textContent.trim(),  // Now first column
+            name: cells[1].textContent.trim(),
+            role: cells[2].textContent.trim(),
+            email: cells[3].textContent.trim(),
+            status: cells[4].textContent.trim(),
             qr_filename: row.querySelector('img.qr')?.src.includes('qrcodes/') 
                 ? row.querySelector('img.qr').src.split('qrcodes/')[1] 
                 : null
@@ -772,10 +778,17 @@ function showSection(e, sectionName) {
     };
     document.getElementById('pageTitle').textContent = titles[sectionName];
 
-    if (sectionName === 'attendance' && !attendanceLoaded) {
-        loadAttendance(1);
-        populateLocationFilter();
-        attendanceLoaded = true;
+    if (sectionName === 'attendance') {
+        if (!attendanceLoaded) {
+            loadAttendance(1);
+            populateLocationFilter();
+            attendanceLoaded = true;
+        } else if (attendanceNeedsRefresh) {
+            // ✅ ADD THIS: Refresh if there were updates while section was hidden
+            console.log('[Section Switch] Refreshing attendance due to pending updates');
+            loadAttendance(currentPage, true);
+            attendanceNeedsRefresh = false;
+        }
     }
 
     if (window.innerWidth <= 768) {
@@ -786,6 +799,7 @@ function showSection(e, sectionName) {
         logSecurityEvent('SECTION_VIEWED', `Viewed section: ${sectionName}`);
     }
 }
+
 
 // Initialize charts after DOM is loaded
 let activityChart, hourlyChart;
@@ -1106,7 +1120,7 @@ async function loadAttendance(page = 1, silent = false) {
     
     // **FIX: Don't show loading message on silent refresh**
     if (tbody && !silent) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="loading"></span> Loading attendance records...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="loading"></span> Loading attendance records...</td></tr>`;
     }
 
     try {
@@ -1140,7 +1154,7 @@ async function loadAttendance(page = 1, silent = false) {
             tbody.innerHTML = '';
 
             if (!json.records || json.records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No records found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No records found</td></tr>';
             } else {
                 json.records.forEach((record, index) => {
                     const { date, time } = formatDateTime(record.timestamp);
@@ -1148,7 +1162,6 @@ async function loadAttendance(page = 1, silent = false) {
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${record.log_id}</td>
                         <td><strong>${record.name}</strong></td>
                         <td>${record.role}</td>
                         <td><span class="badge ${badgeClass}">${record.action}</span></td>
@@ -1189,7 +1202,7 @@ async function loadAttendance(page = 1, silent = false) {
     } catch (err) {
         console.error('[Attendance] Error loading:', err);
         if (tbody && !silent) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color: #e53e3e;">Error: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #e53e3e;">Error: ${err.message}</td></tr>`;
         }
     } finally {
         isLoading = false;
@@ -1478,7 +1491,7 @@ async function loadAdminList() {
             tbody.innerHTML = '';
             
             if (!json.admins || json.admins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No admin accounts found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No admin accounts found</td></tr>';
             } else {
                 json.admins.forEach(admin => {
                     const tr = document.createElement('tr');
@@ -1487,7 +1500,6 @@ async function loadAdminList() {
                     const isFirstAdmin = admin.admin_id === 1;
                     
                     tr.innerHTML = `
-                        <td>${admin.admin_id}</td>
                         <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:12px;">${admin.username}</code></td>
                         <td><strong>${admin.name}</strong></td>
                         <td style="font-size: 13px; color: #666;">${admin.email}</td>
@@ -1509,12 +1521,12 @@ async function loadAdminList() {
             }
         } else {
             const tbody = document.getElementById('adminListBody');
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load admin list</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load admin list</td></tr>';
         }
     } catch (err) {
         console.error('Failed to load admin list:', err);
         const tbody = document.getElementById('adminListBody');
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading admin list</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading admin list</td></tr>';
     }
 }
 
@@ -2270,7 +2282,7 @@ async function loadAccessRules() {
         tbody.innerHTML = '';
 
         if (!json.rules || json.rules.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No access rules configured</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No access rules configured</td></tr>';
             return;
         }
 
@@ -2281,7 +2293,6 @@ async function loadAccessRules() {
             const statusClass = rule.enabled ? 'badge-in' : 'badge-out';
 
             tr.innerHTML = `
-            <td>${rule.rule_id}</td>
             <td><strong>${rule.user_name}</strong></td>
             <td><span class="badge ${typeClass}">${rule.rule_type.toUpperCase()}</span></td>
             <td>${rule.location || 'Any'}</td>
@@ -2304,7 +2315,7 @@ async function loadAccessRules() {
         });
     } catch (err) {
         document.getElementById('rulesTableBody').innerHTML =
-            `<tr><td colspan="9" class="empty-state" style="color: #e53e3e;">Error: ${err.message}</td></tr>`;
+            `<tr><td colspan="8" class="empty-state" style="color: #e53e3e;">Error: ${err.message}</td></tr>`;
     }
 }
 
@@ -2521,7 +2532,6 @@ function handleAdminScanEvent(data) {
         
         totalInsideEl.textContent = newValue;
         
-        // Add pulse animation if value changed
         if (oldValue !== newValue) {
             totalInsideEl.style.animation = 'none';
             setTimeout(() => {
@@ -2530,10 +2540,8 @@ function handleAdminScanEvent(data) {
         }
     }
     
-    // Update last activity
     updateLastActivity(data);
     
-    // Show notification
     const action = data.action === 'IN' ? 'entered' : 'exited';
     
     showNotification(
@@ -2542,27 +2550,28 @@ function handleAdminScanEvent(data) {
         data.action === 'IN' ? 'success' : 'info'
     );
     
-    // Play notification sound
     playAdminNotificationSound();
     
-    // Refresh dashboard IMMEDIATELY (don't wait for interval)
     console.log('[Admin SSE] Refreshing dashboard...');
     autoRefresh();
     
-    // **FIX: Check if attendance section is visible and refresh it**
+    // **DEBUG: Check attendance section visibility**
     const attendanceSection = document.getElementById('section-attendance');
     const isAttendanceVisible = attendanceSection && !attendanceSection.classList.contains('section-hidden');
     
+    console.log('[Admin SSE] Attendance section exists:', !!attendanceSection);
+    console.log('[Admin SSE] Attendance visible:', isAttendanceVisible);
+    console.log('[Admin SSE] Attendance loaded:', attendanceLoaded);
+    
     if (isAttendanceVisible && attendanceLoaded) {
-        console.log('[Admin SSE] Attendance section visible - refreshing NOW');
+        console.log('[Admin SSE] ✅ Refreshing attendance NOW');
         
-        // Immediate refresh without cooldown
         setTimeout(() => {
-            lastAttendanceUpdate = Date.now(); // Update timestamp
+            lastAttendanceUpdate = Date.now();
             loadAttendance(currentPage, true); // Silent refresh
         }, 300);
     } else {
-        console.log('[Admin SSE] Attendance not visible, marking for refresh');
+        console.log('[Admin SSE] ⏸️ Attendance not visible, marking for refresh');
         attendanceNeedsRefresh = true;
     }
 }

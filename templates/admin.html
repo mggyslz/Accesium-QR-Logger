@@ -299,7 +299,6 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Log ID</th>
                                         <th>Name</th>
                                         <th>Role</th>
                                         <th>Action</th>
@@ -368,7 +367,6 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Username</th>
                                         <th>Name</th>
                                         <th>Role</th>
@@ -381,7 +379,6 @@
                                 <tbody id="usersTbody">
                                     {% for u in users %}
                                     <tr data-name="{{ u[2]|lower }}" data-role="{{ u[3]|lower }}">
-                                        <td>{{ u[0] }}</td>
                                         <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:12px;">{{ u[1] }}</code></td>
                                         <td><strong>{{ u[2] }}</strong></td>
                                         <td>{{ u[3] }}</td>
@@ -405,7 +402,7 @@
                                     </tr>
                                     {% else %}
                                     <tr>
-                                        <td colspan="8" class="empty-state">No users found.</td>
+                                        <td colspan="7" class="empty-state">No users found.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -636,7 +633,6 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>User</th>
                                         <th>Type</th>
                                         <th>Location</th>
@@ -827,7 +823,6 @@
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
                                             <th>Username</th>
                                             <th>Name</th>
                                             <th>Email</th>
