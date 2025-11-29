@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+
+# Environment files
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Database (if you want to start fresh each time)
+# data/*.db
+
+# Generated files (optional - uncomment if you want fresh starts)
+# static/exports/*
+# static/qrcodes/*
+
+# Documentation
+*.md
+README.md
+
+# Testing
+tests/
+.pytest_cache/
+.coverage
