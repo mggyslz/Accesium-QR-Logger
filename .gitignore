@@ -50,8 +50,6 @@ config/.env
 .env.dev
 .env.prod
 secrets.json
-*.key
-*.pem
 
 # ---- Build / Distribution ----
 build/
