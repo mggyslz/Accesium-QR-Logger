@@ -474,7 +474,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initializeSecurity();
     initializeDarkMode();
-    watchSystemTheme();
     
     // Initialize SSE for real-time updates
     initializeSSE();
@@ -1093,9 +1092,8 @@ function showSessionWarning() {
 
 function initializeDarkMode() {
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+
+    if (savedTheme === 'dark') {
         enableDarkMode(false);
     } else {
         disableDarkMode(false);
@@ -1143,20 +1141,6 @@ function disableDarkMode(save = true) {
     }
 }
 
-function watchSystemTheme() {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    mediaQuery.addListener((e) => {
-        const savedTheme = localStorage.getItem('theme');
-        if (!savedTheme) {
-            if (e.matches) {
-                enableDarkMode(false);
-            } else {
-                disableDarkMode(false);
-            }
-        }
-    });
-}
 
 function extendSession() {
     const warningEl = document.getElementById('sessionTimeoutWarning');
