@@ -16,17 +16,15 @@ let securityState = {
     isLocked: false
 };
 
-// SSE connection
 let eventSource = null;
 let reconnectTimeout = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 3000;
 
-// Attendance state management
 let attendanceNeedsRefresh = false;
 let lastAttendanceUpdate = 0;
-const ATTENDANCE_UPDATE_COOLDOWN = 1000; // Reduced for better real-time
+const ATTENDANCE_UPDATE_COOLDOWN = 1000;
 let pendingRefresh = false;
 let currentPage = 1;
 let totalPages = 1;
@@ -34,222 +32,251 @@ const recordsPerPage = 10;
 let attendanceLoaded = false;
 let isLoading = false;
 
+const NotificationType = {
+    SUCCESS: 'success',
+    WARNING: 'warning',
+    DANGER: 'danger',
+    INFO: 'info'
+};
+
+const StatusType = {
+    IN: 'IN',
+    OUT: 'OUT',
+    UNKNOWN: 'UNKNOWN'
+};
+
 function formatDateTime(timestamp) {
     if (!timestamp) return { date: '--', time: '--' };
     
-    // Split timestamp into date and time parts
-    // Expected format from backend: "2025-01-15 02:30:45 PM"
     const parts = timestamp.split(' ');
-    
     if (parts.length >= 3) {
         return {
-            date: parts[0],                    // "2025-01-15"
-            time: `${parts[1]} ${parts[2]}`    // "02:30:45 PM"
-        };
-    } else if (parts.length === 2) {
-        return {
             date: parts[0],
-            time: parts[1]
+            time: `${parts[1]} ${parts[2]}`
         };
     }
-    
-    return { date: timestamp, time: '--' };
+    return parts.length === 2 ? { date: parts[0], time: parts[1] } : { date: timestamp, time: '--' };
 }
-
 
 function getCSRFToken() {
     const metaTag = document.querySelector('meta[name="csrf-token"]');
-    return metaTag ? metaTag.getAttribute('content') : '';
+    return metaTag?.getAttribute('content') || '';
 }
 
 function createFormDataWithCSRF() {
     const fd = new FormData();
     const csrfToken = getCSRFToken();
-    if (csrfToken) {
-        fd.append('csrf_token', csrfToken);
-    }
+    if (csrfToken) fd.append('csrf_token', csrfToken);
     return fd;
 }
 
-/**
- * Initialize SSE connection for real-time updates
- */
 function initializeSSE() {
-    if (eventSource) {
-        eventSource.close();
-    }
+    eventSource?.close();
 
     console.log('Connecting to SSE stream...');
     eventSource = new EventSource('/sse/stream');
 
-    eventSource.onopen = function() {
+    eventSource.onopen = () => {
         console.log('SSE connection established');
         reconnectAttempts = 0;
-        
-        // Show connection indicator
-        const indicator = document.getElementById('realtimeIndicator');
-        if (indicator) {
-            indicator.textContent = '● Live';
-            indicator.style.color = '#38a169';
-        }
+        updateConnectionIndicator('● Live', '#38a169');
     };
 
-    eventSource.onmessage = function(event) {
+    eventSource.onmessage = (event) => {
         try {
-            const data = JSON.parse(event.data);
-            handleSSEEvent(data);
+            handleSSEEvent(JSON.parse(event.data));
         } catch (error) {
             console.error('Error parsing SSE message:', error);
         }
     };
 
-    eventSource.onerror = function(error) {
+    eventSource.onerror = (error) => {
         console.error('SSE connection error:', error);
         eventSource.close();
-        
-        // Update connection indicator
-        const indicator = document.getElementById('realtimeIndicator');
-        if (indicator) {
-            indicator.textContent = '● Disconnected';
-            indicator.style.color = '#e53e3e';
-        }
-        
-        // Attempt reconnection
+        updateConnectionIndicator('● Disconnected', '#e53e3e');
         attemptReconnect();
     };
 }
 
-/**
- * Handle incoming SSE events
- */
+function updateConnectionIndicator(text, color) {
+    const indicator = document.getElementById('realtimeIndicator');
+    if (indicator) {
+        indicator.textContent = text;
+        indicator.style.color = color;
+    }
+}
+
 function handleSSEEvent(event) {
-    switch (event.type) {
-        case 'connected':
-            console.log('SSE stream connected');
-            break;
-            
-        case 'heartbeat':
-            // Connection is alive
-            break;
-            
-        case 'scan_event':
-            handleScanEvent(event.data);
-            break;
-            
-        default:
-            console.log('Unknown SSE event:', event);
+    
+    if (event.type === 'connected') {
+        console.log('SSE stream connected');
+    } else if (event.type === 'heartbeat') {
+        // Do nothing
+    } else if (event.type === 'scan_event') {
+        handleScanEvent(event.data);
+    } else {
+        console.log('Unknown SSE event:', event);
     }
 }
 
 function handleScanEvent(data) {
     console.log('Scan event received:', data);
     
-    // Update stats instantly
-    if (data.stats) {
-        document.getElementById('totalScansToday').textContent = data.stats.total;
-        document.getElementById('timesInToday').textContent = data.stats.in_count;
-        document.getElementById('timesOutToday').textContent = data.stats.out_count;
-    }
+    if (data.stats) updateStats(data.stats);
+    if (data.status) updateCurrentStatusDisplay(data.status);
     
-    // Update current status
-    if (data.status) {
-        updateCurrentStatusDisplay(data.status);
-    }
-    
-    // Update recent location
     updateRecentLocationDisplay(data);
+    showScanNotification(data);
+    playNotificationSound();
     
-    // Show professional notification without emoji
-    const action = data.action === 'IN' ? 'Entered' : 'Exited';
+    refreshAttendanceInBackground();
+    debounceHeatmapRefresh();
+    loadRecentActivity();
+}
+
+function updateStats(stats) {
+    document.getElementById('totalScansToday').textContent = stats.total;
+    document.getElementById('timesInToday').textContent = stats.in_count;
+    document.getElementById('timesOutToday').textContent = stats.out_count;
+}
+
+function showScanNotification(data) {
+    const action = data.action === StatusType.IN ? 'Entered' : 'Exited';
     const location = data.location || 'Gate';
     
     showProfessionalNotification(
         `Access ${action}`,
         `${action} at ${location}`,
-        data.action === 'IN' ? 'success' : 'info'
+        data.action === StatusType.IN ? NotificationType.SUCCESS : NotificationType.INFO
     );
-    
-    // Play notification sound
-    playNotificationSound();
-    
-    // Refresh attendance with improved real-time handling
-    refreshAttendanceInBackground();
-    
-    // Refresh activity heatmap (debounced)
-    debounceHeatmapRefresh();
-    loadRecentActivity();
 }
 
-/**
- * Professional notification system without emojis
- */
-function showProfessionalNotification(title, message, type = 'info') {
+function refreshAttendanceInBackground() {
+    const now = Date.now();
+    
+    if (now - lastAttendanceUpdate < ATTENDANCE_UPDATE_COOLDOWN) {
+        console.log('[Attendance] Cooldown active, queuing refresh');
+        pendingRefresh = true;
+        setTimeout(() => {
+            if (pendingRefresh) {
+                pendingRefresh = false;
+                refreshAttendanceInBackground();
+            }
+        }, ATTENDANCE_UPDATE_COOLDOWN);
+        return;
+    }
+    
+    if (isLoading) {
+        console.log('[Attendance] Already loading, queuing refresh');
+        pendingRefresh = true;
+        setTimeout(() => {
+            if (pendingRefresh && !isLoading) {
+                pendingRefresh = false;
+                refreshAttendanceInBackground();
+            }
+        }, 1000);
+        return;
+    }
+    
+    lastAttendanceUpdate = now;
+    pendingRefresh = false;
+    console.log('[Attendance] Background refresh triggered');
+    
+    currentPage = 1;
+    const attendanceSection = document.getElementById('section-attendance');
+    const isVisible = attendanceSection && !attendanceSection.classList.contains('section-hidden');
+    loadAttendance(1, !isVisible);
+}
+
+function updateCurrentStatusDisplay(status) {
+    const statusElement = document.getElementById('currentStatus');
+    if (!statusElement) return;
+    
+    const statusConfig = {
+        [StatusType.IN]: { class: 'status-in', text: `Inside (${status.location})` },
+        [StatusType.OUT]: { class: 'status-out', text: 'Outside' },
+        [StatusType.UNKNOWN]: { class: 'status-unknown', text: 'No Records' }
+    };
+    
+    const config = statusConfig[status.status] || statusConfig[StatusType.UNKNOWN];
+    statusElement.innerHTML = `<span class="status-badge ${config.class}">${config.text}</span>`;
+}
+
+function updateRecentLocationDisplay(data) {
+    const locationNameEl = document.getElementById('recentLocation');
+    const locationTimeEl = document.getElementById('recentLocationTime');
+    if (!locationNameEl || !locationTimeEl) return;
+    
+    const action = data.action === StatusType.IN ? 'Entered' : 'Exited';
+    locationNameEl.textContent = `${action} at ${data.location}`;
+    
+    if (data.timestamp) {
+        const { date, time } = formatDateTime(data.timestamp);
+        locationTimeEl.textContent = `${date} at ${time}`;
+    }
+}
+
+function playNotificationSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioContext) return;
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+        console.log('Notification sound not available:', error);
+    }
+}
+
+let heatmapRefreshTimeout = null;
+function debounceHeatmapRefresh() {
+    clearTimeout(heatmapRefreshTimeout);
+    heatmapRefreshTimeout = setTimeout(() => loadActivityHeatmap(), 2000);
+}
+
+function attemptReconnect() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.error('Max reconnection attempts reached');
+        showProfessionalNotification(
+            'Connection Lost',
+            'Lost connection to server. Please refresh the page.',
+            NotificationType.WARNING
+        );
+        return;
+    }
+    
+    reconnectAttempts++;
+    console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+    
+    reconnectTimeout = setTimeout(() => initializeSSE(), RECONNECT_DELAY * reconnectAttempts);
+}
+
+function showProfessionalNotification(title, message, type = NotificationType.INFO) {
+    ensureNotificationStyles();
+    
     const notification = document.createElement('div');
     notification.className = 'professional-notification';
     
-    // Ensure animation styles exist
-    if (!document.getElementById('notification-animations')) {
-        const style = document.createElement('style');
-        style.id = 'notification-animations';
-        style.textContent = `
-            @keyframes slideInRight {
-                from { 
-                    opacity: 0;
-                    transform: translateX(400px);
-                }
-                to { 
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-5px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // Type-based styling with dark mode support
-    let bgColor, borderColor, icon, textColor;
-    
-    // Check if dark mode is active
     const isDarkMode = document.body.classList.contains('dark-mode');
+    const styleConfig = getNotificationStyle(type, isDarkMode);
     
-    switch (type) {
-        case 'success':
-            bgColor = isDarkMode ? '#1e3a1e' : '#f0f9f4';
-            borderColor = isDarkMode ? '#4caf50' : '#38a169';
-            textColor = isDarkMode ? '#e0e0e0' : '#2d3748';
-            icon = '✓';
-            break;
-        case 'warning':
-            bgColor = isDarkMode ? '#3a3a1e' : '#fffaf0';
-            borderColor = isDarkMode ? '#ff9800' : '#dd6b20';
-            textColor = isDarkMode ? '#e0e0e0' : '#2d3748';
-            icon = '!';
-            break;
-        case 'danger':
-            bgColor = isDarkMode ? '#3a1e1e' : '#fef2f2';
-            borderColor = isDarkMode ? '#f44336' : '#dc3545';
-            textColor = isDarkMode ? '#e0e0e0' : '#2d3748';
-            icon = '✕';
-            break;
-        case 'info':
-        default:
-            bgColor = isDarkMode ? '#1e2a3a' : '#f0f9ff';
-            borderColor = isDarkMode ? '#42a5f5' : '#3182ce';
-            textColor = isDarkMode ? '#e0e0e0' : '#2d3748';
-            icon = 'i';
-    }
-
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${bgColor};
-        border: 1px solid ${borderColor};
-        border-left: 4px solid ${borderColor};
+        background: ${styleConfig.bgColor};
+        border: 1px solid ${styleConfig.borderColor};
+        border-left: 4px solid ${styleConfig.borderColor};
         padding: 16px 20px;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -270,7 +297,7 @@ function showProfessionalNotification(title, message, type = 'info') {
                 width: 20px;
                 height: 20px;
                 border-radius: 50%;
-                background: ${borderColor};
+                background: ${styleConfig.borderColor};
                 color: white;
                 display: flex;
                 align-items: center;
@@ -278,9 +305,9 @@ function showProfessionalNotification(title, message, type = 'info') {
                 font-size: 12px;
                 font-weight: bold;
                 flex-shrink: 0;
-            ">${icon}</div>
+            ">${styleConfig.icon}</div>
             <div style="flex: 1;">
-                <div style="font-weight: 600; font-size: 14px; color: ${textColor}; margin-bottom: 4px;">${title}</div>
+                <div style="font-weight: 600; font-size: 14px; color: ${styleConfig.textColor}; margin-bottom: 4px;">${title}</div>
                 <div style="font-size: 13px; color: ${secondaryTextColor}; line-height: 1.4;">${message}</div>
                 <div style="font-size: 11px; color: ${tertiaryTextColor}; margin-top: 6px;">${new Date().toLocaleTimeString()}</div>
             </div>
@@ -290,8 +317,59 @@ function showProfessionalNotification(title, message, type = 'info') {
     `;
 
     document.body.appendChild(notification);
+    autoRemoveNotification(notification);
+}
 
-    // Auto remove after 5 seconds
+function getNotificationStyle(type, isDarkMode) {
+    const styles = {
+        [NotificationType.SUCCESS]: {
+            bgColor: isDarkMode ? '#1e3a1e' : '#f0f9f4',
+            borderColor: isDarkMode ? '#4caf50' : '#38a169',
+            textColor: isDarkMode ? '#e0e0e0' : '#2d3748',
+            icon: '✓'
+        },
+        [NotificationType.WARNING]: {
+            bgColor: isDarkMode ? '#3a3a1e' : '#fffaf0',
+            borderColor: isDarkMode ? '#ff9800' : '#dd6b20',
+            textColor: isDarkMode ? '#e0e0e0' : '#2d3748',
+            icon: '!'
+        },
+        [NotificationType.DANGER]: {
+            bgColor: isDarkMode ? '#3a1e1e' : '#fef2f2',
+            borderColor: isDarkMode ? '#f44336' : '#dc3545',
+            textColor: isDarkMode ? '#e0e0e0' : '#2d3748',
+            icon: '✗'
+        },
+        [NotificationType.INFO]: {
+            bgColor: isDarkMode ? '#1e2a3a' : '#f0f9ff',
+            borderColor: isDarkMode ? '#42a5f5' : '#3182ce',
+            textColor: isDarkMode ? '#e0e0e0' : '#2d3748',
+            icon: 'i'
+        }
+    };
+    
+    return styles[type] || styles[NotificationType.INFO];
+}
+
+function ensureNotificationStyles() {
+    if (document.getElementById('notification-animations')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'notification-animations';
+    style.textContent = `
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(400px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function autoRemoveNotification(notification) {
     setTimeout(() => {
         if (notification.parentElement) {
             notification.style.opacity = '0';
@@ -302,171 +380,7 @@ function showProfessionalNotification(title, message, type = 'info') {
     }, 5000);
 }
 
-
-function refreshAttendanceInBackground() {
-    const now = Date.now();
-    
-    // Prevent too frequent updates
-    if (now - lastAttendanceUpdate < ATTENDANCE_UPDATE_COOLDOWN) {
-        console.log('[Attendance] Cooldown active, queuing refresh');
-        pendingRefresh = true;
-        setTimeout(() => {
-            if (pendingRefresh) {
-                pendingRefresh = false;
-                refreshAttendanceInBackground();
-            }
-        }, ATTENDANCE_UPDATE_COOLDOWN);
-        return;
-    }
-    
-    // If already loading, queue the refresh for later
-    if (isLoading) {
-        console.log('[Attendance] Already loading, queuing refresh');
-        pendingRefresh = true;
-        
-        setTimeout(() => {
-            if (pendingRefresh && !isLoading) {
-                pendingRefresh = false;
-                refreshAttendanceInBackground();
-            }
-        }, 1000);
-        return;
-    }
-    
-    lastAttendanceUpdate = now;
-    pendingRefresh = false;
-    
-    console.log('[Attendance] Background refresh triggered');
-    
-    // Reset to page 1 to show newest records
-    currentPage = 1;
-    
-    // Load attendance without showing loading state if not visible
-    const attendanceSection = document.getElementById('section-attendance');
-    const isVisible = attendanceSection && !attendanceSection.classList.contains('section-hidden');
-    
-    loadAttendance(1, !isVisible); // Pass 'silent' flag if not visible
-}
-
-/**
- * Update current status display
- */
-function updateCurrentStatusDisplay(status) {
-    const statusElement = document.getElementById('currentStatus');
-    if (!statusElement) return;
-    
-    let badgeClass = 'status-badge';
-    let statusText = status.status;
-    
-    if (status.status === 'IN') {
-        badgeClass += ' status-in';
-        statusText = `Inside (${status.location})`;
-    } else if (status.status === 'OUT') {
-        badgeClass += ' status-out';
-        statusText = `Outside`;
-    } else {
-        badgeClass += ' status-unknown';
-        statusText = 'No Records';
-    }
-    
-    statusElement.innerHTML = `<span class="${badgeClass}">${statusText}</span>`;
-}
-
-/**
- * Update recent location display
- */
-function updateRecentLocationDisplay(data) {
-    const locationNameEl = document.getElementById('recentLocation');
-    const locationTimeEl = document.getElementById('recentLocationTime');
-    
-    if (!locationNameEl || !locationTimeEl) return;
-    
-    const action = data.action === 'IN' ? 'Entered' : 'Exited';
-    locationNameEl.textContent = `${action} at ${data.location}`;
-    
-    if (data.timestamp) {
-        const timeParts = data.timestamp.split(' ');
-        locationTimeEl.textContent = `${timeParts[0]} at ${timeParts[1]}`;
-    }
-}
-
-/**
- * Play notification sound
- */
-function playNotificationSound() {
-    try {
-        // Simple beep using Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Only proceed if audio context is available and not suspended
-        if (audioContext) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            gainNode.gain.value = 0.1;
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
-        }
-    } catch (error) {
-        console.log('Notification sound not available:', error);
-        // Silently fail - audio is non-essential
-    }
-}
-
-/**
- * Debounced heatmap refresh
- */
-let heatmapRefreshTimeout = null;
-function debounceHeatmapRefresh() {
-    if (heatmapRefreshTimeout) {
-        clearTimeout(heatmapRefreshTimeout);
-    }
-    heatmapRefreshTimeout = setTimeout(() => {
-        loadActivityHeatmap();
-    }, 2000);
-}
-
-/**
- * Attempt to reconnect SSE
- */
-function attemptReconnect() {
-    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        console.error('Max reconnection attempts reached');
-        showProfessionalNotification(
-            'Connection Lost',
-            'Lost connection to server. Please refresh the page.',
-            'warning'
-        );
-        return;
-    }
-    
-    reconnectAttempts++;
-    console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
-    
-    reconnectTimeout = setTimeout(() => {
-        initializeSSE();
-    }, RECONNECT_DELAY * reconnectAttempts);
-}
-
-/**
- * Cleanup SSE on page unload
- */
-window.addEventListener('beforeunload', function() {
-    if (eventSource) {
-        eventSource.close();
-    }
-    if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     if (typeof APP_CONFIG === 'undefined') {
         console.error('APP_CONFIG not found. Make sure it is defined in the HTML file.');
         return;
@@ -474,12 +388,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initializeSecurity();
     initializeDarkMode();
-    
-    // Initialize SSE for real-time updates
     initializeSSE();
+    setupEventListeners();
+    setupLogoutConfirmation();
+    
+    loadInitialData();
+    console.log('[Init] Real-time attendance updates enabled');
+});
 
+function setupEventListeners() {
     const filterDateFrom = document.getElementById('filterDateFrom');
     const filterDateTo = document.getElementById('filterDateTo');
+    const filterAction = document.getElementById('filterAction');
+    const profileForm = document.getElementById('profileForm');
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
     
     if (filterDateFrom) {
         filterDateFrom.valueAsDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -491,100 +414,60 @@ document.addEventListener('DOMContentLoaded', function () {
         filterDateTo.addEventListener('change', instantRefresh);
     }
 
-    const filterAction = document.getElementById('filterAction');
-    if (filterAction) {
-        filterAction.addEventListener('change', instantRefresh);
-    }
-
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', handleProfileSubmit);
-    }
-
-    const newPassword = document.getElementById('new_password');
-    const confirmPassword = document.getElementById('confirm_password');
-    
+    if (filterAction) filterAction.addEventListener('change', instantRefresh);
+    if (profileForm) profileForm.addEventListener('submit', handleProfileSubmit);
     if (newPassword) newPassword.addEventListener('input', validatePassword);
     if (confirmPassword) confirmPassword.addEventListener('input', validatePasswordMatch);
 
-    if (APP_CONFIG.forcePasswordChange) {
-        const passwordAlert = document.getElementById('passwordAlert');
-        const passwordInfoBox = document.getElementById('passwordInfoBox');
-        
-        if (passwordAlert) passwordAlert.style.display = 'block';
-        if (passwordInfoBox) passwordInfoBox.style.display = 'none';
+    handleForcePasswordChange();
+}
 
-        const profileLink = document.querySelector('[onclick*="profile"]');
-        if (profileLink) {
-            profileLink.addEventListener('click', function (e) {
-                setTimeout(() => {
-                    const profileSection = document.getElementById('section-profile');
-                    if (profileSection) {
-                        profileSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                }, 100);
-            });
-        }
+function handleForcePasswordChange() {
+    if (!APP_CONFIG.forcePasswordChange) return;
+    
+    const passwordAlert = document.getElementById('passwordAlert');
+    const passwordInfoBox = document.getElementById('passwordInfoBox');
+    
+    if (passwordAlert) passwordAlert.style.display = 'block';
+    if (passwordInfoBox) passwordInfoBox.style.display = 'none';
+
+    const profileLink = document.querySelector('[onclick*="profile"]');
+    if (profileLink) {
+        profileLink.addEventListener('click', (e) => {
+            setTimeout(() => {
+                const profileSection = document.getElementById('section-profile');
+                if (profileSection) profileSection.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        });
     }
+}
 
-    setupLogoutConfirmation();
+function loadInitialData() {
     loadAttendance(1);
     attendanceLoaded = true;
-
     loadDailyStats();
     loadCurrentStatus();
     loadRecentLocation();     
     loadActivityHeatmap();
     loadRecentActivity();
-    
-    console.log('[Init] Real-time attendance updates enabled');
-    
-    // Add CSS animations for notifications
-    if (!document.getElementById('notification-animations')) {
-        const style = document.createElement('style');
-        style.id = 'notification-animations';
-        style.textContent = `
-            @keyframes slideInRight {
-                from { 
-                    opacity: 0;
-                    transform: translateX(400px);
-                }
-                to { 
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-5px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-});
+}
 
 function instantRefresh() {
     if (!isLoading) {
         currentPage = 1;
-        loadAttendance(1, false); // Not silent - user initiated
+        loadAttendance(1, false);
     }
 }
 
 function setupLogoutConfirmation() {
-    const logoutForms = document.querySelectorAll('form[action*="logout"]');
-
-    logoutForms.forEach(form => {
-        form.addEventListener('submit', function (e) {
+    document.querySelectorAll('form[action*="logout"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
             if (!confirm('Are you sure you want to logout?')) {
                 e.preventDefault();
                 return false;
             }
             
-            // Close SSE connection before logout
-            if (eventSource) {
-                eventSource.close();
-            }
-            
+            eventSource?.close();
             this.dataset.submitting = 'true';
         });
     });
@@ -593,7 +476,7 @@ function setupLogoutConfirmation() {
 function handleProfileSubmit(e) {
     if (!checkRateLimit()) {
         e.preventDefault();
-        showProfessionalNotification('Rate Limit', 'Please wait before making another request', 'warning');
+        showProfessionalNotification('Rate Limit', 'Please wait before making another request', NotificationType.WARNING);
         return false;
     }
 
@@ -602,47 +485,51 @@ function handleProfileSubmit(e) {
     const newPassword = document.getElementById('new_password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
 
-    if (!username || username.length < 3) {
+    if (!validateProfileForm(username, name, newPassword, confirmPassword)) {
         e.preventDefault();
-        showProfessionalNotification('Validation Error', 'Username must be at least 3 characters long', 'warning');
-        document.getElementById('username').focus();
         return false;
-    }
-
-    if (!name) {
-        e.preventDefault();
-        showProfessionalNotification('Validation Error', 'Name is required', 'warning');
-        document.getElementById('name').focus();
-        return false;
-    }
-
-    if (newPassword || confirmPassword) {
-        if (!newPassword || !confirmPassword) {
-            e.preventDefault();
-            showProfessionalNotification('Password Change', 'Please fill both password fields to change your password', 'warning');
-            document.getElementById('new_password').focus();
-            return false;
-        }
-
-        if (newPassword.length < 8) {
-            e.preventDefault();
-            showProfessionalNotification('Password Requirements', 'Password must be at least 8 characters long', 'warning');
-            document.getElementById('new_password').focus();
-            return false;
-        }
-
-        if (newPassword !== confirmPassword) {
-            e.preventDefault();
-            showProfessionalNotification('Password Mismatch', 'Passwords do not match. Please ensure both passwords are identical.', 'warning');
-            document.getElementById('confirm_password').focus();
-            return false;
-        }
     }
 
     const btn = document.getElementById('saveProfileBtn');
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<span class="loading"></span> Saving...';
+    }
+
+    return true;
+}
+
+function validateProfileForm(username, name, newPassword, confirmPassword) {
+    if (!username || username.length < 3) {
+        showProfessionalNotification('Validation Error', 'Username must be at least 3 characters long', NotificationType.WARNING);
+        document.getElementById('username').focus();
+        return false;
+    }
+
+    if (!name) {
+        showProfessionalNotification('Validation Error', 'Name is required', NotificationType.WARNING);
+        document.getElementById('name').focus();
+        return false;
+    }
+
+    if (newPassword || confirmPassword) {
+        if (!newPassword || !confirmPassword) {
+            showProfessionalNotification('Password Change', 'Please fill both password fields to change your password', NotificationType.WARNING);
+            document.getElementById('new_password').focus();
+            return false;
+        }
+
+        if (newPassword.length < 8) {
+            showProfessionalNotification('Password Requirements', 'Password must be at least 8 characters long', NotificationType.WARNING);
+            document.getElementById('new_password').focus();
+            return false;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showProfessionalNotification('Password Mismatch', 'Passwords do not match. Please ensure both passwords are identical.', NotificationType.WARNING);
+            document.getElementById('confirm_password').focus();
+            return false;
+        }
     }
 
     return true;
@@ -655,28 +542,29 @@ async function loadRecentLocation() {
         
         if (data.status === 'success') {
             updateCurrentStatusDisplay(data.user_status);
-            
-            const status = data.user_status;
-            const locationNameEl = document.getElementById('recentLocation');
-            const locationTimeEl = document.getElementById('recentLocationTime');
-            
-            if (status.status === 'UNKNOWN') {
-                locationNameEl.textContent = 'No recent activity';
-                locationTimeEl.textContent = 'Start scanning to see your location history';
-            } else {
-                const action = status.status === 'IN' ? 'Entered' : 'Exited';
-                locationNameEl.textContent = `${action} at ${status.location}`;
-                
-                if (status.timestamp) {
-                    // NEW: Use formatDateTime helper
-                    const { date, time } = formatDateTime(status.timestamp);
-                    locationTimeEl.textContent = `${date} at ${time}`;
-                }
-            }
+            updateLocationDisplay(data.user_status);
         }
     } catch (error) {
         console.error('Error loading recent location:', error);
         document.getElementById('recentLocation').textContent = 'Unable to load location';
+    }
+}
+
+function updateLocationDisplay(status) {
+    const locationNameEl = document.getElementById('recentLocation');
+    const locationTimeEl = document.getElementById('recentLocationTime');
+    
+    if (status.status === StatusType.UNKNOWN) {
+        locationNameEl.textContent = 'No recent activity';
+        locationTimeEl.textContent = 'Start scanning to see your location history';
+    } else {
+        const action = status.status === StatusType.IN ? 'Entered' : 'Exited';
+        locationNameEl.textContent = `${action} at ${status.location}`;
+        
+        if (status.timestamp) {
+            const { date, time } = formatDateTime(status.timestamp);
+            locationTimeEl.textContent = `${date} at ${time}`;
+        }
     }
 }
 
@@ -699,7 +587,7 @@ function renderHeatmapVertical(activityData) {
     const columnsEl = document.getElementById('heatmapColumns');
     const monthsEl = document.getElementById('heatmapMonths');
     
-    if (!activityData || activityData.length === 0) {
+    if (!activityData?.length) {
         columnsEl.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-tertiary); font-size: 12px;">No activity data available</div>';
         return;
     }
@@ -714,55 +602,54 @@ function renderHeatmapVertical(activityData) {
     tooltip.className = 'heatmap-tooltip';
     document.body.appendChild(tooltip);
     
-    const dateMap = new Map();
-    activityData.forEach(day => {
-        dateMap.set(day.date, day.count);
-    });
-    
+    const dateMap = new Map(activityData.map(day => [day.date, day.count]));
+    const { allDays, monthGroups } = generateDayData(dateMap);
+    renderHeatmapStructure(columnsEl, monthsEl, allDays, monthGroups, maxCount, tooltip);
+}
+
+function generateDayData(dateMap) {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - 364);
     
     const allDays = [];
     const currentDate = new Date(startDate);
+    const monthGroups = new Map();
     
     while (currentDate <= endDate) {
         const dateStr = currentDate.toISOString().split('T')[0];
         const count = dateMap.get(dateStr) || 0;
+        const monthKey = currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         
-        allDays.push({
+        const dayData = {
             date: dateStr,
-            count: count,
+            count,
             dayOfWeek: currentDate.getDay(),
             month: currentDate.toLocaleDateString('en-US', { month: 'short' }),
-            monthKey: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            monthKey,
             year: currentDate.getFullYear(),
             monthIndex: currentDate.getMonth()
-        });
+        };
+        
+        allDays.push(dayData);
+        
+        if (!monthGroups.has(monthKey)) {
+            monthGroups.set(monthKey, {
+                name: dayData.month,
+                days: [],
+                year: dayData.year,
+                monthIndex: dayData.monthIndex
+            });
+        }
+        monthGroups.get(monthKey).days.push(dayData);
         
         currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    const monthGroups = new Map();
-    
-    allDays.forEach(day => {
-        if (!monthGroups.has(day.monthKey)) {
-            monthGroups.set(day.monthKey, {
-                name: day.month,
-                days: [],
-                year: day.year,
-                monthIndex: day.monthIndex
-            });
-        }
-        monthGroups.get(day.monthKey).days.push(day);
-    });
-    
-    const monthArray = Array.from(monthGroups.entries())
-        .sort((a, b) => {
-            if (a[1].year !== b[1].year) return a[1].year - b[1].year;
-            return a[1].monthIndex - b[1].monthIndex;
-        });
-    
+    return { allDays, monthGroups };
+}
+
+function renderHeatmapStructure(columnsEl, monthsEl, allDays, monthGroups, maxCount, tooltip) {
     columnsEl.innerHTML = `
         <div class="heatmap-day-labels">
             <div class="day-label">M</div>
@@ -777,41 +664,50 @@ function renderHeatmapVertical(activityData) {
     `;
     
     const heatmapGrid = document.getElementById('heatmapGrid');
-    const monthWidths = [];
+    const monthArray = Array.from(monthGroups.entries())
+        .sort((a, b) => a[1].year !== b[1].year ? a[1].year - b[1].year : a[1].monthIndex - b[1].monthIndex);
     
-    monthArray.forEach(([monthKey, monthData]) => {
-        const weeks = [];
-        let currentWeek = [];
-        let currentWeekStartDay = -1;
-        
-        monthData.days.forEach(day => {
-            const dayOfWeek = day.dayOfWeek;
-            
-            if (currentWeekStartDay === -1) {
-                currentWeekStartDay = dayOfWeek;
-            }
-            
-            while (currentWeek.length < dayOfWeek) {
-                currentWeek.push({ empty: true, dayOfWeek: currentWeek.length });
-            }
-            
-            currentWeek.push(day);
-            
-            if (dayOfWeek === 6 || day === monthData.days[monthData.days.length - 1]) {
-                while (currentWeek.length < 7) {
-                    currentWeek.push({ empty: true, dayOfWeek: currentWeek.length });
-                }
-                weeks.push(currentWeek);
-                currentWeek = [];
-                currentWeekStartDay = -1;
-            }
-        });
-        
+    const monthWidths = monthArray.map(([, monthData]) => {
+        const weeks = groupDaysIntoWeeks(monthData.days);
         monthData.weeks = weeks;
-        const monthWidth = weeks.length * 10 - 2;
-        monthWidths.push(monthWidth);
+        return weeks.length * 10 - 2;
     });
     
+    renderMonthLabels(monthsEl, monthArray, monthWidths);
+    renderHeatmapGrid(heatmapGrid, monthArray, maxCount, tooltip);
+    adjustHeatmapLayout(heatmapGrid, monthsEl);
+}
+
+function groupDaysIntoWeeks(days) {
+    const weeks = [];
+    let currentWeek = [];
+    let currentWeekStartDay = -1;
+    
+    days.forEach(day => {
+        const dayOfWeek = day.dayOfWeek;
+        
+        if (currentWeekStartDay === -1) currentWeekStartDay = dayOfWeek;
+        
+        while (currentWeek.length < dayOfWeek) {
+            currentWeek.push({ empty: true, dayOfWeek: currentWeek.length });
+        }
+        
+        currentWeek.push(day);
+        
+        if (dayOfWeek === 6 || day === days[days.length - 1]) {
+            while (currentWeek.length < 7) {
+                currentWeek.push({ empty: true, dayOfWeek: currentWeek.length });
+            }
+            weeks.push(currentWeek);
+            currentWeek = [];
+            currentWeekStartDay = -1;
+        }
+    });
+    
+    return weeks;
+}
+
+function renderMonthLabels(monthsEl, monthArray, monthWidths) {
     monthArray.forEach(([monthKey, monthData], index) => {
         const monthLabel = document.createElement('div');
         monthLabel.className = 'month-label';
@@ -820,7 +716,9 @@ function renderHeatmapVertical(activityData) {
         monthLabel.style.flex = `0 0 ${monthWidths[index]}px`;
         monthsEl.appendChild(monthLabel);
     });
-    
+}
+
+function renderHeatmapGrid(heatmapGrid, monthArray, maxCount, tooltip) {
     monthArray.forEach(([monthKey, monthData], monthIndex) => {
         const monthGroup = document.createElement('div');
         monthGroup.className = 'heatmap-month-group';
@@ -832,51 +730,7 @@ function renderHeatmapVertical(activityData) {
             const column = document.createElement('div');
             column.className = 'heatmap-column';
             
-            week.forEach(day => {
-                const square = document.createElement('div');
-                square.className = 'heatmap-day';
-                
-                if (day.empty) {
-                    square.classList.add('empty');
-                } else {
-                    let level = 0;
-                    if (day.count > 0) {
-                        const percentage = day.count / maxCount;
-                        if (percentage <= 0.25) level = 1;
-                        else if (percentage <= 0.5) level = 2;
-                        else if (percentage <= 0.75) level = 3;
-                        else level = 4;
-                    }
-                    
-                    square.classList.add(`level-${level}`);
-                    square.dataset.date = day.date;
-                    square.dataset.count = day.count;
-                    
-                    square.addEventListener('mouseenter', (e) => {
-                        const date = new Date(day.date);
-                        const formattedDate = date.toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                        });
-                        
-                        tooltip.textContent = `${day.count} ${day.count === 1 ? 'scan' : 'scans'} on ${formattedDate}`;
-                        tooltip.classList.add('show');
-                        
-                        const rect = square.getBoundingClientRect();
-                        tooltip.style.left = (rect.left + window.scrollX - (tooltip.offsetWidth / 2) + 4) + 'px';
-                        tooltip.style.top = (rect.top + window.scrollY - tooltip.offsetHeight - 4) + 'px';
-                    });
-                    
-                    square.addEventListener('mouseleave', () => {
-                        tooltip.classList.remove('show');
-                    });
-                }
-                
-                column.appendChild(square);
-            });
-            
+            week.forEach(day => renderHeatmapDay(column, day, maxCount, tooltip));
             monthColumns.appendChild(column);
         });
         
@@ -889,7 +743,56 @@ function renderHeatmapVertical(activityData) {
             heatmapGrid.appendChild(separator);
         }
     });
+}
+
+function renderHeatmapDay(column, day, maxCount, tooltip) {
+    const square = document.createElement('div');
+    square.className = 'heatmap-day';
     
+    if (day.empty) {
+        square.classList.add('empty');
+    } else {
+        const level = calculateHeatmapLevel(day.count, maxCount);
+        square.classList.add(`level-${level}`);
+        square.dataset.date = day.date;
+        square.dataset.count = day.count;
+        setupHeatmapDayEvents(square, day, tooltip);
+    }
+    
+    column.appendChild(square);
+}
+
+function calculateHeatmapLevel(count, maxCount) {
+    if (count === 0) return 0;
+    const percentage = count / maxCount;
+    if (percentage <= 0.25) return 1;
+    if (percentage <= 0.5) return 2;
+    if (percentage <= 0.75) return 3;
+    return 4;
+}
+
+function setupHeatmapDayEvents(square, day, tooltip) {
+    square.addEventListener('mouseenter', (e) => {
+        const date = new Date(day.date);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        tooltip.textContent = `${day.count} ${day.count === 1 ? 'scan' : 'scans'} on ${formattedDate}`;
+        tooltip.classList.add('show');
+        
+        const rect = square.getBoundingClientRect();
+        tooltip.style.left = (rect.left + window.scrollX - (tooltip.offsetWidth / 2) + 4) + 'px';
+        tooltip.style.top = (rect.top + window.scrollY - tooltip.offsetHeight - 4) + 'px';
+    });
+    
+    square.addEventListener('mouseleave', () => tooltip.classList.remove('show'));
+}
+
+function adjustHeatmapLayout(heatmapGrid, monthsEl) {
     setTimeout(() => {
         const gridRect = heatmapGrid.getBoundingClientRect();
         const dayLabelsRect = document.querySelector('.heatmap-day-labels').getBoundingClientRect();
@@ -901,11 +804,7 @@ function renderHeatmapVertical(activityData) {
 
 async function checkSessionStatus() {
     try {
-        const response = await fetch('/health', {
-            method: 'GET',
-            credentials: 'include'
-        });
-
+        const response = await fetch('/health', { method: 'GET', credentials: 'include' });
         if (response.status === 401 || response.status === 403) {
             window.location.href = APP_CONFIG.loginUrl || '/login';
         }
@@ -916,33 +815,34 @@ async function checkSessionStatus() {
 
 setInterval(checkSessionStatus, 5 * 60 * 1000);
 
-window.addEventListener('pageshow', function (event) {
+window.addEventListener('pageshow', function(event) {
     if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-        const isProtectedPage = window.location.pathname.includes('/admin/') ||
-            window.location.pathname.includes('/user/dashboard');
-
-        if (isProtectedPage) {
-            window.location.reload();
-        }
+        const isProtectedPage = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/dashboard');
+        if (isProtectedPage) window.location.reload();
     }
 });
 
-window.addEventListener('beforeunload', function (e) {
+window.addEventListener('beforeunload', function() {
+    if (eventSource) eventSource.close();
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+});
+
+window.addEventListener('beforeunload', function(e) {
     const logoutForm = document.querySelector('form[action*="logout"]');
-    if (logoutForm && logoutForm.dataset.submitting === 'true') {
-        if (window.sessionStorage) {
-            sessionStorage.clear();
-        }
-        if (window.localStorage) {
-            const keysToKeep = ['user_device_token', 'admin_device_token'];
-            Object.keys(localStorage).forEach(key => {
-                if (!keysToKeep.includes(key)) {
-                    localStorage.removeItem(key);
-                }
-            });
-        }
+    if (logoutForm?.dataset.submitting === 'true') {
+        cleanupStorage();
     }
 });
+
+function cleanupStorage() {
+    if (window.sessionStorage) sessionStorage.clear();
+    if (window.localStorage) {
+        const keysToKeep = ['user_device_token', 'admin_device_token'];
+        Object.keys(localStorage).forEach(key => {
+            if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+        });
+    }
+}
 
 function validatePassword() {
     const password = document.getElementById('new_password').value;
@@ -951,34 +851,26 @@ function validatePassword() {
     const strengthText = document.getElementById('strengthText');
 
     let strength = 0;
-
     if (password.length >= 8) strength += 25;
     if (/[A-Z]/.test(password)) strength += 25;
     if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength += 25;
 
     if (strengthFill) {
         strengthFill.style.width = strength + '%';
-
-        if (password.length === 0) {
-            strengthText.textContent = 'Password strength';
-            strengthFill.style.backgroundColor = '#ddd';
-        } else if (strength < 50) {
-            strengthText.textContent = 'Weak';
-            strengthFill.style.backgroundColor = '#e53e3e';
-        } else if (strength < 75) {
-            strengthText.textContent = 'Fair';
-            strengthFill.style.backgroundColor = '#dd6b20';
-        } else {
-            strengthText.textContent = 'Strong';
-            strengthFill.style.backgroundColor = '#38a169';
-        }
+        const strengthConfig = getPasswordStrengthConfig(strength, password.length);
+        strengthText.textContent = strengthConfig.text;
+        strengthFill.style.backgroundColor = strengthConfig.color;
     }
 
     updateValidationSummary();
+    if (confirmPassword) validatePasswordMatch();
+}
 
-    if (confirmPassword) {
-        validatePasswordMatch();
-    }
+function getPasswordStrengthConfig(strength, passwordLength) {
+    if (passwordLength === 0) return { text: 'Password strength', color: '#ddd' };
+    if (strength < 50) return { text: 'Weak', color: '#e53e3e' };
+    if (strength < 75) return { text: 'Fair', color: '#dd6b20' };
+    return { text: 'Strong', color: '#38a169' };
 }
 
 function validatePasswordMatch() {
@@ -988,23 +880,20 @@ function validatePasswordMatch() {
     const matchText = document.getElementById('matchText');
     const matchIndicator = document.getElementById('matchIndicator');
 
-    if (matchIcon && matchText && matchIndicator) {
-        if (confirmPassword.length === 0) {
-            matchIcon.textContent = '—';
-            matchText.textContent = 'Passwords must match';
-            matchIndicator.style.color = '#666';
-        } else if (password === confirmPassword) {
-            matchIcon.textContent = '✓';
-            matchText.textContent = 'Passwords match';
-            matchIndicator.style.color = '#38a169';
-        } else {
-            matchIcon.textContent = '✗';
-            matchText.textContent = 'Passwords do not match';
-            matchIndicator.style.color = '#e53e3e';
-        }
-    }
+    if (!matchIcon || !matchText || !matchIndicator) return;
+
+    const matchConfig = getPasswordMatchConfig(password, confirmPassword);
+    matchIcon.textContent = matchConfig.icon;
+    matchText.textContent = matchConfig.text;
+    matchIndicator.style.color = matchConfig.color;
 
     updateValidationSummary();
+}
+
+function getPasswordMatchConfig(password, confirmPassword) {
+    if (confirmPassword.length === 0) return { icon: '—', text: 'Passwords must match', color: '#666' };
+    if (password === confirmPassword) return { icon: '✓', text: 'Passwords match', color: '#38a169' };
+    return { icon: '✗', text: 'Passwords do not match', color: '#e53e3e' };
 }
 
 function updateValidationSummary() {
@@ -1015,34 +904,27 @@ function updateValidationSummary() {
     const validationMatch = document.getElementById('validationMatch');
 
     if (validationSummary) {
-        if (password.length > 0 || confirmPassword.length > 0) {
-            validationSummary.style.display = 'block';
-        } else {
-            validationSummary.style.display = 'none';
-            return;
-        }
+        validationSummary.style.display = (password.length > 0 || confirmPassword.length > 0) ? 'block' : 'none';
     }
 
-    if (validationLength) {
-        const lengthValid = password.length >= 8;
-        validationLength.querySelector('.validation-icon').textContent = lengthValid ? '✓' : '○';
-        validationLength.querySelector('.validation-icon').style.color = lengthValid ? '#38a169' : '#666';
-        validationLength.querySelector('.validation-text').style.color = lengthValid ? '#38a169' : '#666';
-    }
+    updateValidationItem(validationLength, password.length >= 8);
+    updateValidationItem(validationMatch, password === confirmPassword && password.length > 0 && confirmPassword.length > 0);
+}
 
-    if (validationMatch) {
-        const matchValid = password === confirmPassword && password.length > 0 && confirmPassword.length > 0;
-        validationMatch.querySelector('.validation-icon').textContent = matchValid ? '✓' : '○';
-        validationMatch.querySelector('.validation-icon').style.color = matchValid ? '#38a169' : '#666';
-        validationMatch.querySelector('.validation-text').style.color = matchValid ? '#38a169' : '#666';
-    }
+function updateValidationItem(validationElement, isValid) {
+    if (!validationElement) return;
+    const icon = validationElement.querySelector('.validation-icon');
+    const text = validationElement.querySelector('.validation-text');
+    const color = isValid ? '#38a169' : '#666';
+    
+    icon.textContent = isValid ? '✓' : '○';
+    icon.style.color = color;
+    text.style.color = color;
 }
 
 function initializeSecurity() {
-    document.addEventListener('mousemove', resetSessionTimer);
-    document.addEventListener('keypress', resetSessionTimer);
-    document.addEventListener('click', resetSessionTimer);
-    document.addEventListener('scroll', resetSessionTimer);
+    const events = ['mousemove', 'keypress', 'click', 'scroll'];
+    events.forEach(event => document.addEventListener(event, resetSessionTimer));
 
     startSessionTimer();
     setInterval(checkSecurityStatus, SECURITY_CONFIG.inactivityCheckInterval);
@@ -1053,12 +935,10 @@ function initializeSecurity() {
 }
 
 function startSessionTimer() {
-    if (securityState.sessionTimer) clearTimeout(securityState.sessionTimer);
-    if (securityState.warningTimer) clearTimeout(securityState.warningTimer);
+    clearTimeout(securityState.sessionTimer);
+    clearTimeout(securityState.warningTimer);
 
-    securityState.warningTimer = setTimeout(showSessionWarning,
-        SECURITY_CONFIG.sessionTimeout - SECURITY_CONFIG.warningTime);
-
+    securityState.warningTimer = setTimeout(showSessionWarning, SECURITY_CONFIG.sessionTimeout - SECURITY_CONFIG.warningTime);
     securityState.sessionTimer = setTimeout(logoutUser, SECURITY_CONFIG.sessionTimeout);
 }
 
@@ -1069,84 +949,70 @@ function resetSessionTimer() {
 
 function showSessionWarning() {
     const warningEl = document.getElementById('sessionTimeoutWarning');
-    if (warningEl) {
-        warningEl.classList.remove('section-hidden');
+    if (!warningEl) return;
+    
+    warningEl.classList.remove('section-hidden');
+    startCountdown();
+}
 
-        let timeLeft = SECURITY_CONFIG.warningTime / 1000;
-        const countdownElement = document.getElementById('countdown');
+function startCountdown() {
+    let timeLeft = SECURITY_CONFIG.warningTime / 1000;
+    const countdownElement = document.getElementById('countdown');
 
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            if (countdownElement) {
-                countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        if (countdownElement) {
+            countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
 
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-            }
-        }, 1000);
-    }
+        if (timeLeft <= 0) clearInterval(countdownInterval);
+    }, 1000);
 }
 
 function initializeDarkMode() {
     const savedTheme = localStorage.getItem('theme');
-
-    if (savedTheme === 'dark') {
-        enableDarkMode(false);
-    } else {
-        disableDarkMode(false);
-    }
+    const isDark = savedTheme === 'dark';
+    
+    if (isDark) enableDarkMode(false);
+    else disableDarkMode(false);
     
     const toggle = document.getElementById('darkModeToggle');
-    if (toggle) {
-        toggle.checked = document.body.classList.contains('dark-mode');
-    }
+    if (toggle) toggle.checked = isDark;
 }
 
 function toggleDarkMode() {
-    if (document.body.classList.contains('dark-mode')) {
-        disableDarkMode(true);
-    } else {
-        enableDarkMode(true);
-    }
+    if (document.body.classList.contains('dark-mode')) disableDarkMode(true);
+    else enableDarkMode(true);
 }
 
 function enableDarkMode(save = true) {
     document.body.classList.add('dark-mode');
-    
     if (save) {
         localStorage.setItem('theme', 'dark');
-        showProfessionalNotification('Appearance', 'Dark mode enabled', 'info');
+        showProfessionalNotification('Appearance', 'Dark mode enabled', NotificationType.INFO);
     }
-    
-    const toggle = document.getElementById('darkModeToggle');
-    if (toggle) {
-        toggle.checked = true;
-    }
+    updateDarkModeToggle(true);
 }
 
 function disableDarkMode(save = true) {
     document.body.classList.remove('dark-mode');
-    
     if (save) {
         localStorage.setItem('theme', 'light');
-        showProfessionalNotification('Appearance', 'Light mode enabled', 'info');
+        showProfessionalNotification('Appearance', 'Light mode enabled', NotificationType.INFO);
     }
-    
-    const toggle = document.getElementById('darkModeToggle');
-    if (toggle) {
-        toggle.checked = false;
-    }
+    updateDarkModeToggle(false);
 }
 
+function updateDarkModeToggle(checked) {
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) toggle.checked = checked;
+}
 
 function extendSession() {
     const warningEl = document.getElementById('sessionTimeoutWarning');
-    if (warningEl) {
-        warningEl.classList.add('section-hidden');
-    }
+    if (warningEl) warningEl.classList.add('section-hidden');
 
     if (!APP_CONFIG.resendCodeUrl) {
         console.error('Resend code URL not configured');
@@ -1156,21 +1022,19 @@ function extendSession() {
 
     fetch(APP_CONFIG.resendCodeUrl, {
         method: 'POST',
-        headers: {
-            'X-CSRF-Token': getCSRFToken()
+        headers: { 'X-CSRF-Token': getCSRFToken() }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success' || data.status === 'error') {
+            resetSessionTimer();
+            showProfessionalNotification('Session Extended', 'Session extended successfully', NotificationType.SUCCESS);
         }
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' || data.status === 'error') {
-                resetSessionTimer();
-                showProfessionalNotification('Session Extended', 'Session extended successfully', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error extending session:', error);
-            resetSessionTimer();
-        });
+    .catch(error => {
+        console.error('Error extending session:', error);
+        resetSessionTimer();
+    });
 }
 
 function logoutUser() {
@@ -1179,73 +1043,73 @@ function logoutUser() {
 
 function checkRateLimit() {
     const now = Date.now();
-    if (now - securityState.lastApiCall < SECURITY_CONFIG.apiRateLimit) {
-        return false;
-    }
+    if (now - securityState.lastApiCall < SECURITY_CONFIG.apiRateLimit) return false;
     securityState.lastApiCall = now;
     return true;
 }
 
 function checkConnectionSecurity() {
     const securityStatus = document.getElementById('securityStatus');
-
     if (!securityStatus) return;
 
-    const isLocalhost = window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname === '[::1]';
-
+    const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
     const isHTTPS = window.location.protocol === 'https:';
 
+    const securityConfig = getSecurityConfig(isHTTPS, isLocalhost);
+    securityStatus.className = `security-indicator ${securityConfig.type}`;
+    securityStatus.textContent = securityConfig.text;
+
+    setTimeout(() => {
+        showProfessionalNotification(securityConfig.notification.title, securityConfig.notification.message, securityConfig.notification.type);
+    }, securityConfig.delay);
+}
+
+function getSecurityConfig(isHTTPS, isLocalhost) {
     if (isHTTPS) {
-        securityStatus.className = 'security-indicator secure';
-        securityStatus.textContent = 'Secure Connection';
-
-        setTimeout(() => {
-            showProfessionalNotification(
-                'Secure Connection Active',
-                'Your connection is encrypted with HTTPS. All data is transmitted securely.',
-                'success'
-            );
-        }, 1000);
-
-    } else if (isLocalhost) {
-        securityStatus.className = 'security-indicator warning';
-        securityStatus.textContent = 'Development Mode';
-
-        setTimeout(() => {
-            showProfessionalNotification(
-                'Development Environment',
-                'Running in development mode. Always use HTTPS in production environments.',
-                'warning'
-            );
-        }, 1000);
-
-    } else {
-        securityStatus.className = 'security-indicator danger';
-        securityStatus.textContent = 'INSECURE CONNECTION';
-
-        setTimeout(() => {
-            showProfessionalNotification(
-                'CRITICAL: INSECURE CONNECTION',
-                'CRITICAL SECURITY WARNING: This connection is NOT encrypted. All data including passwords are transmitted in plain text and can be intercepted. HTTPS MUST be enabled immediately!',
-                'danger'
-            );
-        }, 500);
-
-        console.error('SECURITY ALERT: Production site accessed over unencrypted HTTP connection');
+        return {
+            type: 'secure',
+            text: 'Secure Connection',
+            delay: 1000,
+            notification: {
+                title: 'Secure Connection Active',
+                message: 'Your connection is encrypted with HTTPS. All data is transmitted securely.',
+                type: NotificationType.SUCCESS
+            }
+        };
     }
+    
+    if (isLocalhost) {
+        return {
+            type: 'warning',
+            text: 'Development Mode',
+            delay: 1000,
+            notification: {
+                title: 'Development Environment',
+                message: 'Running in development mode. Always use HTTPS in production environments.',
+                type: NotificationType.WARNING
+            }
+        };
+    }
+    
+    return {
+        type: 'danger',
+        text: 'INSECURE CONNECTION',
+        delay: 500,
+        notification: {
+            title: 'CRITICAL: INSECURE CONNECTION',
+            message: 'CRITICAL SECURITY WARNING: This connection is NOT encrypted. All data including passwords are transmitted in plain text and can be intercepted. HTTPS MUST be enabled immediately!',
+            type: NotificationType.DANGER
+        }
+    };
 }
 
 function checkSecurityStatus() {
     const timeSinceLastActivity = Date.now() - securityState.lastActivity;
-
-    if (timeSinceLastActivity > 15 * 60 * 1000) {
-        const securityStatus = document.getElementById('securityStatus');
-        if (securityStatus && securityStatus.className === 'security-indicator secure') {
-            securityStatus.className = 'security-indicator warning';
-            securityStatus.textContent = 'Inactive';
-        }
+    const securityStatus = document.getElementById('securityStatus');
+    
+    if (timeSinceLastActivity > 15 * 60 * 1000 && securityStatus?.className === 'security-indicator secure') {
+        securityStatus.className = 'security-indicator warning';
+        securityStatus.textContent = 'Inactive';
     }
 }
 
@@ -1255,47 +1119,39 @@ function updateActivityTime() {
     const activityElement = document.getElementById('lastActivityTime');
 
     if (activityElement) {
-        if (minutes === 0) {
-            activityElement.textContent = 'Just now';
-        } else if (minutes === 1) {
-            activityElement.textContent = '1 minute ago';
-        } else if (minutes < 60) {
-            activityElement.textContent = `${minutes} minutes ago`;
-        } else {
-            const hours = Math.floor(minutes / 60);
-            activityElement.textContent = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-        }
+        activityElement.textContent = formatActivityTime(minutes);
     }
 }
 
+function formatActivityTime(minutes) {
+    if (minutes === 0) return 'Just now';
+    if (minutes === 1) return '1 minute ago';
+    if (minutes < 60) return `${minutes} minutes ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+}
+
 function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('active');
-    }
+    document.getElementById('sidebar')?.classList.toggle('active');
 }
 
 function showSection(e, sectionName) {
     e.preventDefault();
 
-    // Hide all sections
-    document.querySelectorAll('[id^="section-"]').forEach(section => {
-        section.classList.add('section-hidden');
-    });
+    document.querySelectorAll('[id^="section-"]').forEach(section => section.classList.add('section-hidden'));
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
 
-    // Show target section
     const targetSection = document.getElementById('section-' + sectionName);
-    if (targetSection) {
-        targetSection.classList.remove('section-hidden');
-    }
-
-    // Update active menu item
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.classList.remove('active');
-    });
+    if (targetSection) targetSection.classList.remove('section-hidden');
     e.currentTarget.classList.add('active');
 
-    // Update page title
+    updatePageTitle(sectionName);
+    handleSectionSpecificLogic(sectionName);
+    closeMobileSidebar();
+}
+
+function updatePageTitle(sectionName) {
     const titles = {
         'dashboard': 'Dashboard',
         'qr': 'My QR Code',
@@ -1305,34 +1161,27 @@ function showSection(e, sectionName) {
     };
     
     const pageTitleEl = document.getElementById('pageTitle');
-    if (pageTitleEl) {
-        pageTitleEl.textContent = titles[sectionName] || 'Dashboard';
-    }
+    if (pageTitleEl) pageTitleEl.textContent = titles[sectionName] || 'Dashboard';
+}
 
-    // Handle attendance section
+function handleSectionSpecificLogic(sectionName) {
     if (sectionName === 'attendance') {
-        // If attendance hasn't been loaded yet, load it
         if (!attendanceLoaded) {
             console.log('[Attendance] Loading for first time');
             loadAttendance(1);
             attendanceLoaded = true;
         }
-        // If there's a pending refresh flag, clear it
-        // (data should already be updated from background refresh)
         attendanceNeedsRefresh = false;
     }
+}
 
-    // Close sidebar on mobile
+function closeMobileSidebar() {
     if (window.innerWidth <= 768) {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.classList.remove('active');
-        }
+        document.getElementById('sidebar')?.classList.remove('active');
     }
 }
 
 async function loadAttendance(page = 1, silent = false) {
-    // If we're already loading and this is a background refresh, queue it
     if (isLoading && silent) {
         console.log('[Attendance-BG] Already loading, marking for refresh');
         attendanceNeedsRefresh = true;
@@ -1340,9 +1189,7 @@ async function loadAttendance(page = 1, silent = false) {
     }
 
     if (!checkRateLimit()) {
-        if (!silent) {
-            showProfessionalNotification('Rate Limit', 'Please wait before making another request', 'warning');
-        }
+        if (!silent) showProfessionalNotification('Rate Limit', 'Please wait before making another request', NotificationType.WARNING);
         return;
     }
 
@@ -1355,25 +1202,12 @@ async function loadAttendance(page = 1, silent = false) {
     isLoading = true;
 
     const tbody = document.getElementById('attendanceBody');
-    
-    // Only show loading state if not in silent mode
     if (tbody && !silent) {
         tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><span class="loading"></span> Loading attendance records...</td></tr>`;
     }
 
     try {
-        const dateFrom = document.getElementById('filterDateFrom')?.value || '';
-        const dateTo = document.getElementById('filterDateTo')?.value || '';
-        const action = document.getElementById('filterAction')?.value || '';
-
-        const params = new URLSearchParams({
-            page: currentPage,
-            per_page: recordsPerPage,
-            date_from: dateFrom,
-            date_to: dateTo,
-            action: action
-        });
-
+        const params = buildAttendanceParams();
         const logPrefix = silent ? '[Attendance-BG]' : '[Attendance]';
         console.log(`${logPrefix} Loading page ${currentPage}...`);
         
@@ -1387,21 +1221,13 @@ async function loadAttendance(page = 1, silent = false) {
         updatePagination(json.total_records);
 
         const totalRecordsEl = document.getElementById('totalRecords');
-        if (totalRecordsEl) {
-            totalRecordsEl.textContent = json.total_records;
-        }
+        if (totalRecordsEl) totalRecordsEl.textContent = json.total_records;
 
         console.log(`${logPrefix} Loaded ${json.records.length} records`);
         
-        // Clear the refresh flag after successful load
         attendanceNeedsRefresh = false;
+        if (silent) console.log('[Attendance-BG] Records updated silently');
         
-        // Show subtle notification if updated in background
-        if (silent) {
-            console.log('[Attendance-BG] Records updated silently');
-        }
-        
-        // If there was a refresh request while loading, process it now
         if (attendanceNeedsRefresh && silent) {
             console.log('[Attendance-BG] Processing queued refresh');
             setTimeout(() => {
@@ -1420,6 +1246,20 @@ async function loadAttendance(page = 1, silent = false) {
     }
 }
 
+function buildAttendanceParams() {
+    const dateFrom = document.getElementById('filterDateFrom')?.value || '';
+    const dateTo = document.getElementById('filterDateTo')?.value || '';
+    const action = document.getElementById('filterAction')?.value || '';
+
+    return new URLSearchParams({
+        page: currentPage,
+        per_page: recordsPerPage,
+        date_from: dateFrom,
+        date_to: dateTo,
+        action: action
+    });
+}
+
 function renderAttendance(records) {
     const tbody = document.getElementById('attendanceBody');
     if (!tbody) return;
@@ -1429,17 +1269,15 @@ function renderAttendance(records) {
     
     tbody.innerHTML = '';
 
-    if (!records || records.length === 0) {
+    if (!records?.length) {
         tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No attendance records found</td></tr>`;
         return;
     }
 
     records.forEach((r, index) => {
         const tr = document.createElement('tr');
-        
-        // NEW: Use formatDateTime helper
         const { date, time } = formatDateTime(r.timestamp);
-        const badgeClass = r.action === 'IN' ? 'badge-in' : 'badge-out';
+        const badgeClass = r.action === StatusType.IN ? 'badge-in' : 'badge-out';
         
         tr.innerHTML = `
             <td><span class="badge ${badgeClass}">${r.action}</span></td>
@@ -1448,23 +1286,16 @@ function renderAttendance(records) {
             <td>${r.location || 'Gate'}</td>
         `;
         
-        if (index < 3) {
-            tr.style.animation = 'fadeIn 0.3s ease-in';
-        }
-        
+        if (index < 3) tr.style.animation = 'fadeIn 0.3s ease-in';
         tbody.appendChild(tr);
     });
     
-    if (container) {
-        container.scrollTop = scrollTop;
-    }
+    if (container) container.scrollTop = scrollTop;
 }
 
 function updatePagination(totalRecords) {
     const pageInfo = document.getElementById('pageInfo');
-    if (pageInfo) {
-        pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalRecords} total)`;
-    }
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalRecords} total)`;
     
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -1478,15 +1309,11 @@ async function loadRecentActivity() {
         const response = await fetch(`${window.location.origin}/user/recent-activity`);
         const data = await response.json();
         
-        if (data.status === 'success') {
-            renderRecentActivityTable(data.activity);
-        }
+        if (data.status === 'success') renderRecentActivityTable(data.activity);
     } catch (error) {
         console.error('Error loading recent activity:', error);
         const tableBody = document.getElementById('recentActivityTableBody');
-        if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-tertiary);">Failed to load</td></tr>';
-        }
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-tertiary);">Failed to load</td></tr>';
     }
 }
 
@@ -1496,47 +1323,31 @@ function renderRecentActivityTable(activity) {
     
     tableBody.innerHTML = '';
     
-    // Add IN row
-    const inRow = document.createElement('tr');
-    if (activity.in) {
-        // NEW: Use formatDateTime helper
-        const { date, time } = formatDateTime(activity.in.timestamp);
-        const location = activity.in.location || 'Gate';
-        
-        inRow.innerHTML = `
-            <td><span class="badge badge-in">IN</span></td>
-            <td style="font-size: 12px; color: var(--text-secondary);">${date} ${time}</td>
-            <td style="font-size: 12px; color: var(--text-secondary);">${location}</td>
-        `;
-    } else {
-        inRow.innerHTML = `
-            <td><span class="badge badge-in">IN</span></td>
-            <td style="font-size: 12px; color: var(--text-tertiary);">No records</td>
-            <td style="font-size: 12px; color: var(--text-tertiary);">--</td>
-        `;
-    }
-    tableBody.appendChild(inRow);
+    renderActivityRow(tableBody, StatusType.IN, activity.in);
+    renderActivityRow(tableBody, StatusType.OUT, activity.out);
+}
+
+function renderActivityRow(tableBody, action, data) {
+    const row = document.createElement('tr');
+    const badgeClass = action === StatusType.IN ? 'badge-in' : 'badge-out';
     
-    // Add OUT row
-    const outRow = document.createElement('tr');
-    if (activity.out) {
-        // NEW: Use formatDateTime helper
-        const { date, time } = formatDateTime(activity.out.timestamp);
-        const location = activity.out.location || 'Gate';
+    if (data) {
+        const { date, time } = formatDateTime(data.timestamp);
+        const location = data.location || 'Gate';
         
-        outRow.innerHTML = `
-            <td><span class="badge badge-out">OUT</span></td>
+        row.innerHTML = `
+            <td><span class="badge ${badgeClass}">${action}</span></td>
             <td style="font-size: 12px; color: var(--text-secondary);">${date} ${time}</td>
             <td style="font-size: 12px; color: var(--text-secondary);">${location}</td>
         `;
     } else {
-        outRow.innerHTML = `
-            <td><span class="badge badge-out">OUT</span></td>
+        row.innerHTML = `
+            <td><span class="badge ${badgeClass}">${action}</span></td>
             <td style="font-size: 12px; color: var(--text-tertiary);">No records</td>
             <td style="font-size: 12px; color: var(--text-tertiary);">--</td>
         `;
     }
-    tableBody.appendChild(outRow);
+    tableBody.appendChild(row);
 }
 
 async function loadDailyStats() {
@@ -1544,12 +1355,7 @@ async function loadDailyStats() {
         const response = await fetch(APP_CONFIG.getDailyStatsUrl);
         const data = await response.json();
         
-        if (data.status === 'success') {
-            const stats = data.stats;
-            document.getElementById('totalScansToday').textContent = stats.total;
-            document.getElementById('timesInToday').textContent = stats.in_count;
-            document.getElementById('timesOutToday').textContent = stats.out_count;
-        }
+        if (data.status === 'success') updateStats(data.stats);
     } catch (error) {
         console.error('Error loading daily stats:', error);
     }
@@ -1560,9 +1366,7 @@ async function loadCurrentStatus() {
         const response = await fetch(APP_CONFIG.getCurrentStatusUrl);
         const data = await response.json();
         
-        if (data.status === 'success') {
-            updateCurrentStatusDisplay(data.user_status);
-        }
+        if (data.status === 'success') updateCurrentStatusDisplay(data.user_status);
     } catch (error) {
         console.error('Error loading current status:', error);
     }

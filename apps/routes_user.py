@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, jsonify, url_for, session, redirect, flash, make_response
 from core.database import (
     get_user_by_username_or_email, add_user_account_with_email, get_user_attendance,
@@ -185,13 +184,13 @@ def login():
             )
             print(f"[DEBUG] Trusted device check: {is_device_trusted}")
         except Exception as e:
-            print(f"❌ Error checking trusted device: {e}")
+            print(f"âŒ Error checking trusted device: {e}")
             log_suspicious_activity('trusted_device_check_error', {
                 'user_id': user_id,
                 'error': str(e)
             })
     
-    # ✅ CRITICAL FIX: Check system settings for 2FA requirement
+    # âœ… CRITICAL FIX: Check system settings for 2FA requirement
     from core.settings_manager import SystemSettings
     require_2fa = SystemSettings.is_2fa_required()
 
@@ -256,7 +255,7 @@ def login():
         clear_login_attempts('user', identifier)
         notify_successful_login('user', user_id, name)
 
-        flash(f"Welcome back, {name}! ⚠️ Warning: 2FA is required but email is not configured.", "warning")
+        flash(f"Welcome back, {name}! âš ï¸ Warning: 2FA is required but email is not configured.", "warning")
         return redirect(url_for('user.dashboard'))
 
     # 2FA not required - direct login
