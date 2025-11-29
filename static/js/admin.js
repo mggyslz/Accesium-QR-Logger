@@ -97,7 +97,6 @@ function formatDateTime(timestamp) {
 document.addEventListener('DOMContentLoaded', function () {
     initializeSecurity();
     initializeDarkMode();
-    watchSystemTheme();
     initializeAdminSSE(); // Initialize real-time updates
 
     document.getElementById('addUserForm').addEventListener('submit', async function (e) {
@@ -1903,18 +1902,14 @@ async function submitSingleRule() {
 }
 
 function initializeDarkMode() {
-    // Check if user has a saved preference
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    // Apply saved theme or system preference IMMEDIATELY (no transition)
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.body.classList.add('dark-mode');
+    if (savedTheme === 'dark') {
+        enableDarkMode(false);
     } else {
-        document.body.classList.remove('dark-mode');
+        disableDarkMode(false);
     }
     
-    // Update toggle state
     const toggle = document.getElementById('darkModeToggle');
     if (toggle) {
         toggle.checked = document.body.classList.contains('dark-mode');
@@ -1967,25 +1962,6 @@ function disableDarkMode(save = true) {
     }
 }
 
-
-function watchSystemTheme() {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    mediaQuery.addListener((e) => {
-        const savedTheme = localStorage.getItem('theme');
-        if (!savedTheme) {
-            if (e.matches) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            const toggle = document.getElementById('darkModeToggle');
-            if (toggle) {
-                toggle.checked = document.body.classList.contains('dark-mode');
-            }
-        }
-    });
-}
 
 // ==========================================
 // ADMIN PASSWORD CHANGE
