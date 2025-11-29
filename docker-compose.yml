@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  accesium:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: accesium-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    env_file:
+      - .env
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Persist generated files
+      - ./static/exports:/app/static/exports
+      - ./static/qrcodes:/app/static/qrcodes
+    networks:
+      - accesium-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  accesium-network:
+    driver: bridge
