@@ -1174,8 +1174,6 @@ async function loadAttendance(page = 1, silent = false) {
         renderAttendance(json.records);
         updatePagination(json.total_records);
 
-        const totalRecordsEl = document.getElementById('totalRecords');
-        if (totalRecordsEl) totalRecordsEl.textContent = json.total_records;
 
         console.log(`${logPrefix} Loaded ${json.records.length} records`);
         
@@ -1200,6 +1198,7 @@ async function loadAttendance(page = 1, silent = false) {
     }
 }
 
+
 function buildAttendanceParams() {
     const dateFrom = document.getElementById('filterDateFrom')?.value || '';
     const dateTo = document.getElementById('filterDateTo')?.value || '';
@@ -1213,6 +1212,7 @@ function buildAttendanceParams() {
         action: action
     });
 }
+
 
 function renderAttendance(records) {
     const tbody = document.getElementById('attendanceBody');
