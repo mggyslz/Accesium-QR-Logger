@@ -392,6 +392,15 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupLogoutConfirmation();
     
+    // Auto-dismiss flash messages after 3 seconds
+    document.querySelectorAll('.flash').forEach(flash => {
+        setTimeout(() => {
+            flash.style.opacity = '0';
+            flash.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(() => flash.remove(), 300);
+        }, 3000);
+    });
+    
     loadInitialData();
     console.log('[Init] Real-time attendance updates enabled');
 });
@@ -928,7 +937,6 @@ function initializeSecurity() {
 
     startSessionTimer();
     setInterval(checkSecurityStatus, SECURITY_CONFIG.inactivityCheckInterval);
-    checkConnectionSecurity();
 
     updateActivityTime();
     setInterval(updateActivityTime, 60000);
@@ -1048,60 +1056,6 @@ function checkRateLimit() {
     return true;
 }
 
-function checkConnectionSecurity() {
-    const securityStatus = document.getElementById('securityStatus');
-    if (!securityStatus) return;
-
-    const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
-    const isHTTPS = window.location.protocol === 'https:';
-
-    const securityConfig = getSecurityConfig(isHTTPS, isLocalhost);
-    securityStatus.className = `security-indicator ${securityConfig.type}`;
-    securityStatus.textContent = securityConfig.text;
-
-    setTimeout(() => {
-        showProfessionalNotification(securityConfig.notification.title, securityConfig.notification.message, securityConfig.notification.type);
-    }, securityConfig.delay);
-}
-
-function getSecurityConfig(isHTTPS, isLocalhost) {
-    if (isHTTPS) {
-        return {
-            type: 'secure',
-            text: 'Secure Connection',
-            delay: 1000,
-            notification: {
-                title: 'Secure Connection Active',
-                message: 'Your connection is encrypted with HTTPS. All data is transmitted securely.',
-                type: NotificationType.SUCCESS
-            }
-        };
-    }
-    
-    if (isLocalhost) {
-        return {
-            type: 'warning',
-            text: 'Development Mode',
-            delay: 1000,
-            notification: {
-                title: 'Development Environment',
-                message: 'Running in development mode. Always use HTTPS in production environments.',
-                type: NotificationType.WARNING
-            }
-        };
-    }
-    
-    return {
-        type: 'danger',
-        text: 'INSECURE CONNECTION',
-        delay: 500,
-        notification: {
-            title: 'CRITICAL: INSECURE CONNECTION',
-            message: 'CRITICAL SECURITY WARNING: This connection is NOT encrypted. All data including passwords are transmitted in plain text and can be intercepted. HTTPS MUST be enabled immediately!',
-            type: NotificationType.DANGER
-        }
-    };
-}
 
 function checkSecurityStatus() {
     const timeSinceLastActivity = Date.now() - securityState.lastActivity;

@@ -229,6 +229,40 @@
         overflow-x: auto;
       }
 
+.email-template {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.email-header,
+.email-subject {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.email-body {
+  line-height: 1.8;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.email-body p {
+  margin: 0.75rem 0;
+}
+
+.email-body strong {
+  color: #2c2c2c;
+  font-weight: 600;
+}
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -789,16 +823,29 @@
                 Send an email to the administrator at:
                 <strong>qrcodecode49@gmail.com</strong>
               </li>
-              <li>
-                Use the following format for your request:
-                <div class="code-block">
-                  Subject: Account Registration Request - [Your Full Name] Good
-                  day, I would like to request an account for the Accesium
-                  system. Full Name: [Your complete name] Email Address: [Your
-                  email address] Role: [Choose one: Staff / Employee / Student /
-                  Teacher / Visitor] Thank you. Best regards, [Your Name]
-                </div>
-              </li>
+<li>
+  Use the following format for your request:
+  <div class="email-template">
+    <div class="email-header">
+      <strong>To:</strong> qrcodecode49@gmail.com
+    </div>
+    <div class="email-subject">
+      <strong>Subject:</strong> Account Registration Request - [Your Full Name]
+    </div>
+    <div class="email-body">
+      <p>Good day,</p>
+      <p>I would like to request an account for the Accesium system.</p>
+      <p>
+        <strong>Full Name:</strong> [Your complete name]<br>
+        <strong>Email Address:</strong> [Your email address]<br>
+        <strong>Role:</strong> [Choose one: Staff / Employee / Student / Teacher / Visitor]
+      </p>
+      <p>Thank you.</p>
+      <p>Best regards,<br>[Your Name]</p>
+    </div>
+  </div>
+</li>
+
               <li>Wait for the administrator to process your request</li>
               <li>
                 You'll receive your login credentials via email once approved
@@ -1587,15 +1634,28 @@
             </p>
             <ol>
               <li>Send an email to: <strong>qrcodecode49@gmail.com</strong></li>
-              <li>
-                Use this format:
-                <div class="code-block">
-                  Subject: Password Reset Request - [Your Name] Good day, I need
-                  to reset my password for the Accesium system. Username/Email:
-                  [Your login username or email] Full Name: [Your complete name]
-                  Reason: Forgot password Thank you. Best regards, [Your Name]
-                </div>
-              </li>
+ <li>
+  Use this format:
+  <div class="email-template">
+    <div class="email-header">
+      <strong>To:</strong> qrcodecode49@gmail.com
+    </div>
+    <div class="email-subject">
+      <strong>Subject:</strong> Password Reset Request - [Your Name]
+    </div>
+    <div class="email-body">
+      <p>Good day,</p>
+      <p>I need to reset my password for the Accesium system.</p>
+      <p>
+        <strong>Username/Email:</strong> [Your login username or email]<br>
+        <strong>Full Name:</strong> [Your complete name]<br>
+        <strong>Reason:</strong> Forgot password
+      </p>
+      <p>Thank you.</p>
+      <p>Best regards,<br>[Your Name]</p>
+    </div>
+  </div>
+</li>
               <li>
                 Wait for the administrator to generate a new temporary password
               </li>

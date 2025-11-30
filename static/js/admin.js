@@ -412,7 +412,6 @@ function initializeSecurity() {
 
     startSessionTimer();
     setInterval(checkSecurityStatus, SECURITY_CONFIG.inactivityCheckInterval);
-    checkConnectionSecurity();
 }
 
 function startSessionTimer() {
@@ -485,71 +484,6 @@ function checkRateLimit() {
     return true;
 }
 
-function checkConnectionSecurity() {
-    const securityStatus = document.getElementById('securityStatus');
-    const securityOverview = document.getElementById('securityOverview');
-
-    if (!securityStatus) return;
-
-    const isLocalhost = window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname === '[::1]';
-
-    const isHTTPS = window.location.protocol === 'https:';
-
-    if (isHTTPS) {
-        securityStatus.className = 'security-indicator secure';
-        securityStatus.textContent = 'Secure Connection';
-
-        if (securityOverview) {
-            securityOverview.textContent = 'Protected';
-        }
-
-        setTimeout(() => {
-            showNotification(
-                'Your connection is encrypted with HTTPS',
-                'Secure Connection Active',
-                'info'
-            );
-        }, 1000);
-
-    } else if (isLocalhost) {
-        securityStatus.className = 'security-indicator warning';
-        securityStatus.textContent = 'Development Mode';
-
-        if (securityOverview) {
-            securityOverview.textContent = 'Development';
-        }
-
-        setTimeout(() => {
-            showNotification(
-                'Development mode - Use HTTPS in production',
-                'Development Environment',
-                'warning'
-            );
-        }, 1000);
-
-    } else {
-        securityStatus.className = 'security-indicator danger';
-        securityStatus.textContent = 'Insecure';
-
-        if (securityOverview) {
-            securityOverview.textContent = 'CRITICAL RISK';
-        }
-
-        if (typeof logSecurityEvent === 'function') {
-            logSecurityEvent('CRITICAL_INSECURE_CONNECTION', 'Production site accessed over HTTP');
-        }
-
-        setTimeout(() => {
-            showNotification(
-                'CRITICAL: This site is transmitting data without encryption. All passwords and data are visible to attackers. HTTPS must be enabled immediately!',
-                'CRITICAL SECURITY RISK',
-                'danger'
-            );
-        }, 1000);
-    }
-}
 
 function checkSecurityStatus() {
     // Periodic security check placeholder
@@ -1018,6 +952,12 @@ async function autoRefresh() {
         
         // Update the display AFTER checking for changes
         currentInside.textContent = newInsideValue;
+
+        // Update today's scans count
+        const todayScansEl = document.getElementById('todayScansCount');
+        if (todayScansEl && json.today_scans !== undefined) {
+            todayScansEl.textContent = json.today_scans;
+        }
 
         // Update Last Activity in Welcome Section
         if (json.recent_logs && json.recent_logs.length > 0) {

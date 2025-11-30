@@ -1792,116 +1792,167 @@ def set_security_headers(response):
             </table>
           </div>
 
-          <!-- DEPLOYMENT -->
+<!-- DEPLOYMENT -->
           <div class="section" id="deployment">
             <h2>Deployment</h2>
 
-            <h3>Production Checklist</h3>
+            <h3>Docker Deployment</h3>
+            <p>
+              Accesium is containerized using Docker for easy deployment and consistent environments across different platforms.
+            </p>
+
+            <h4>Docker Configuration</h4>
+            <p>The application includes a complete Docker setup with:</p>
             <ul>
-              <li>Use production-grade web server (Gunicorn, uWSGI)</li>
-              <li>Configure reverse proxy (Nginx, Apache)</li>
-              <li>Enable HTTPS with trusted certificates</li>
-              <li>Set strong SECRET_KEY in environment</li>
-              <li>Configure proper SMTP credentials</li>
-              <li>Set APP_ENV=production</li>
-              <li>Regular database backups</li>
-              <li>Monitor application logs</li>
-              <li>Configure firewall rules</li>
+              <li><strong>Dockerfile:</strong> Defines the container image with Python 3.11 and all dependencies</li>
+              <li><strong>docker-compose.yml:</strong> Orchestrates the application container with volume mounts and network configuration</li>
+              <li><strong>.dockerignore:</strong> Optimizes build time by excluding unnecessary files</li>
             </ul>
 
-            <h3>Web Server Configuration</h3>
-            <h4>Gunicorn Configuration (gunicorn.conf.py)</h4>
+            <h4>Running with Docker Compose</h4>
             <div class="code-block">
               <pre>
-bind = "0.0.0.0:5000"
-workers = 4
-worker_class = "sync"
-worker_connections = 1000
-timeout = 30
-keepalive = 2
-max_requests = 1000
-max_requests_jitter = 100
-preload_app = True
-</pre
-              >
+# Build and start the container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the container
+docker-compose down
+
+# Rebuild after changes
+docker-compose up -d --build
+</pre>
             </div>
 
-            <h4>Nginx Configuration</h4>
+            <h4>Docker Compose Configuration</h4>
             <div class="code-block">
               <pre>
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-    
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-    
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    
-    location /static {
-        alias /path/to/Accesium/static;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-</pre
-              >
+version: '3.8'
+
+services:
+  accesium:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: accesium-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    env_file:
+      - .env
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Persist generated files
+      - ./static/exports:/app/static/exports
+      - ./static/qrcodes:/app/static/qrcodes
+    networks:
+      - accesium-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+</pre>
             </div>
 
-            <h3>Database Maintenance</h3>
-            <h4>Automated Backups</h4>
+            <h3>Railway Deployment</h3>
+            <p>
+              The application is deployed on <strong>Railway</strong>, a modern cloud platform that provides seamless deployment from Git repositories.
+            </p>
+
+            <h4>Railway Features</h4>
+            <ul>
+              <li><strong>Automatic Deployments:</strong> Deploys automatically on git push</li>
+              <li><strong>Environment Variables:</strong> Secure management of sensitive configuration</li>
+              <li><strong>Health Checks:</strong> Automatic monitoring and restart on failures</li>
+              <li><strong>HTTPS:</strong> Automatic SSL certificate provisioning</li>
+              <li><strong>Volume Persistence:</strong> Persistent storage for database and generated files</li>
+            </ul>
+
+            <h4>Railway Deployment Steps</h4>
             <div class="code-block">
               <pre>
+1. Push your code to GitHub/GitLab
+2. Connect your repository to Railway
+3. Configure environment variables in Railway dashboard
+4. Railway automatically detects Dockerfile and builds the container
+5. Application is deployed with a public URL
+</pre>
+            </div>
+
+            <h3>Production Checklist</h3>
+            <ul>
+              <li>✓ Docker containerization for consistent deployment</li>
+              <li>✓ Environment variables configured in Railway/Docker</li>
+              <li>✓ HTTPS enabled automatically via Railway</li>
+              <li>✓ Persistent volumes for database and generated files</li>
+              <li>✓ Health checks configured for automatic recovery</li>
+              <li>✓ Gunicorn production server running with 4 workers</li>
+              <li>✓ Automatic restarts on failure (unless-stopped policy)</li>
+            </ul>
+
+            <h3>Environment Variables</h3>
+            <p>Configure these variables in Railway dashboard or .env file for Docker:</p>
+            <div class="code-block">
+              <pre>
+SECRET_KEY=your-secure-secret-key
+FLASK_ENV=production
+FLASK_APP=app.py
+
+# SMTP Configuration
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=your-email@gmail.com
+
+# Database
+DB_PATH=data/security_app.db
+
+# Directories
+QR_CODE_DIR=static/qrcodes
+</pre>
+            </div>
+
+            <h3>Monitoring & Maintenance</h3>
+            <p>Railway provides built-in monitoring for:</p>
+            <ul>
+              <li>Application logs (real-time streaming)</li>
+              <li>Resource usage (CPU, memory, network)</li>
+              <li>Health check status</li>
+              <li>Deployment history and rollback capability</li>
+            </ul>
+
+            <h4>Database Backups</h4>
+            <p>Regular backups are important. You can automate this with:</p>
+            <div class="code-block">
+              <pre>
+# Create a backup script inside the container
 #!/bin/bash
-# backup_script.sh
-
-BACKUP_DIR="/path/to/backups"
-DB_PATH="/path/to/data/security_app.db"
+BACKUP_DIR="/app/data/backups"
+DB_PATH="/app/data/security_app.db"
 DATE=$(date +%Y%m%d_%H%M%S)
 
-# Create backup
+mkdir -p $BACKUP_DIR
 sqlite3 $DB_PATH ".backup '$BACKUP_DIR/backup_$DATE.db'"
-
-# Compress backup
 gzip "$BACKUP_DIR/backup_$DATE.db"
 
 # Remove backups older than 30 days
 find $BACKUP_DIR -name "*.db.gz" -mtime +30 -delete
-</pre
-              >
+</pre>
             </div>
 
-            <h4>Database Optimization</h4>
-            <div class="code-block">
-              <pre>
-# Regular maintenance script
-sqlite3 data/security_app.db <<EOF
-VACUUM;
-REINDEX;
-ANALYZE;
-EOF
-</pre
-              >
+            <div class="success-box">
+              <strong>Deployment Complete!</strong><br>
+              The application is now running in production with Docker containerization and Railway cloud hosting, providing reliability, scalability, and automatic HTTPS.
             </div>
-
-            <h3>Monitoring & Logging</h3>
-            <p>
-              Application logs are written to stdout/stderr. Recommended
-              monitoring:
-            </p>
-            <ul>
-              <li>Application error rates</li>
-              <li>Database connection pool</li>
-              <li>Disk space for QR codes and exports</li>
-              <li>Failed login attempts</li>
-              <li>Email delivery success rates</li>
-            </ul>
           </div>
 
           <!-- EXTENDING THE SYSTEM -->

@@ -89,6 +89,17 @@ def dashboard():
     
     from core.database import is_first_admin
     is_first_admin_flag = is_first_admin(session['admin_id'])
+    
+    # Get today's scan count
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COUNT(*) FROM access_logs 
+        WHERE DATE(timestamp) = DATE('now')
+    """)
+    today_scans = cur.fetchone()[0]
+    conn.close()
+    
     chart_labels = [row[0] for row in daily_counts]
     chart_ins = [row[1] for row in daily_counts]
     chart_outs = [row[2] for row in daily_counts]
@@ -100,6 +111,7 @@ def dashboard():
         'admin.html',
         users=users,
         total_inside=total_inside,
+        today_scans=today_scans,
         recent_logs=recent_logs,
         chart_labels=chart_labels,
         chart_ins=chart_ins,
@@ -153,9 +165,21 @@ def stats():
         hourly_counts = get_hourly_counts()
         current_inside = get_current_inside()
         active_location = get_active_location()
+        
+        # Get today's scan count
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM access_logs 
+            WHERE DATE(timestamp) = DATE('now')
+        """)
+        today_scans = cur.fetchone()[0]
+        conn.close()
+        
         return jsonify({
             "status": "success",
             "total_inside": total_inside,
+            "today_scans": today_scans,
             "recent_logs": [
                 {"log_id": r[0], "name": r[1], "action": r[2], "timestamp": r[3], "location": r[4]}
                 for r in recent_logs
@@ -171,7 +195,6 @@ def stats():
     except Exception as e:
         log_suspicious_activity('stats_error', {'error': str(e)})
         return jsonify({"status": "error", "message": "Failed to retrieve stats"}), 500
-
 
 
 @admin_bp.route('/export-logs', methods=['GET']) 
