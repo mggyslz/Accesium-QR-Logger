@@ -8,6 +8,7 @@ venv/
 .env/
 .env.bak/
 env/
+
 .venv/
 
 # ---- System files ----
