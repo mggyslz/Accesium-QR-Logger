@@ -1595,7 +1595,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==========================================
 // ACCESS RULES - ENHANCED USER SELECTION
-// Add this to the end of admin.js
 // ==========================================
 
 let allUsers = [];

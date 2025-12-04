@@ -505,6 +505,15 @@ function handleProfileSubmit(e) {
         btn.innerHTML = '<span class="loading"></span> Saving...';
     }
 
+    // Show toast if password is being changed
+    if (newPassword && confirmPassword) {
+        showProfessionalNotification(
+            'Password Changed',
+            'Your password has been updated successfully',
+            NotificationType.SUCCESS
+        );
+    }
+
     return true;
 }
 
