@@ -524,129 +524,127 @@
                     </div>
                 </div>
                 <div id="section-access-rules" class="section-hidden">
-                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Access Control Rules</h3>
-                    <div class="card">
-                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Manage whitelist/blacklist rules for users</p>
-                        
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Add New Rule</h3>
-                        <div class="card" style="margin-bottom: 24px; border: 1px solid #e5e5e5;">
-                            <form id="addRuleForm" style="padding: 20px;">
-                                <!-- User Selection Section -->
-                                <div class="user-selection-section">
-                                    <div class="selection-controls">
-                                        <!-- Search Bar -->
-                                        <div class="search-bar-container" style="position: relative;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                style="position: absolute; top: 50%; left: 8px; transform: translateY(-50%); color: #888;">
-                                                <circle cx="11" cy="11" r="8"></circle>
-                                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                            </svg>
-                                            <input type="text" 
-                                                id="userSearchInput" 
-                                                placeholder=" Search by name, email, or ID..." 
-                                                class="search-input" 
-                                                style="padding-left: 28px;">
-                                        </div>                              
-                                        <!-- Role Filters -->
-                                        <div class="role-filters">
-                                            <label>Filter by Role:</label>
-                                            <label class="role-filter-label">
-                                                <input type="checkbox" class="role-filter-checkbox" value="Staff" checked>
-                                                <span>Staff</span>
-                                            </label>
-                                            <label class="role-filter-label">
-                                                <input type="checkbox" class="role-filter-checkbox" value="Employee" checked>
-                                                <span>Employee</span>
-                                            </label>
-                                            <label class="role-filter-label">
-                                                <input type="checkbox" class="role-filter-checkbox" value="Student" checked>
-                                                <span>Student</span>
-                                            </label>
-                                            <label class="role-filter-label">
-                                                <input type="checkbox" class="role-filter-checkbox" value="Teacher" checked>
-                                                <span>Teacher</span>
-                                            </label>
-                                            <label class="role-filter-label">
-                                                <input type="checkbox" class="role-filter-checkbox" value="Visitor" checked>
-                                                <span>Visitor</span>
-                                            </label>
-                                        </div>
-                                        
-                                        <!-- Bulk Controls -->
-                                        <div class="bulk-controls">
-                                            <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllUsers()">
-                                                ✓ Select All
-                                            </button>
-                                            <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAllUsers()">
-                                                ✕ Clear Selection
-                                            </button>
-                                            <span class="selected-indicator">
-                                                <span id="selectedUserCount" style="display: none;">0</span>
-                                                <span> selected</span>
-                                            </span>
-                                        </div>
+                    <!-- Add New Rule Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Add New Rule</h3>
+                    <div class="card" style="margin-bottom: 32px;">
+                        <form id="addRuleForm" style="padding: 20px;">
+                            <!-- User Selection Section -->
+                            <div class="user-selection-section">
+                                <div class="selection-controls">
+                                    <!-- Search Bar -->
+                                    <div class="search-bar-container" style="position: relative;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            style="position: absolute; top: 50%; left: 8px; transform: translateY(-50%); color: #888;">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <input type="text" 
+                                            id="userSearchInput" 
+                                            placeholder=" Search by name, email, or ID..." 
+                                            class="search-input" 
+                                            style="padding-left: 28px;">
+                                    </div>                              
+                                    <!-- Role Filters -->
+                                    <div class="role-filters">
+                                        <label>Filter by Role:</label>
+                                        <label class="role-filter-label">
+                                            <input type="checkbox" class="role-filter-checkbox" value="Staff" checked>
+                                            <span>Staff</span>
+                                        </label>
+                                        <label class="role-filter-label">
+                                            <input type="checkbox" class="role-filter-checkbox" value="Employee" checked>
+                                            <span>Employee</span>
+                                        </label>
+                                        <label class="role-filter-label">
+                                            <input type="checkbox" class="role-filter-checkbox" value="Student" checked>
+                                            <span>Student</span>
+                                        </label>
+                                        <label class="role-filter-label">
+                                            <input type="checkbox" class="role-filter-checkbox" value="Teacher" checked>
+                                            <span>Teacher</span>
+                                        </label>
+                                        <label class="role-filter-label">
+                                            <input type="checkbox" class="role-filter-checkbox" value="Visitor" checked>
+                                            <span>Visitor</span>
+                                        </label>
                                     </div>
                                     
-                                    <!-- User List -->
-                                    <div id="userSelectionList" class="user-selection-list">
-                                        <div class="empty-state" style="padding: 20px;">Loading users...</div>
-                                    </div>
-                                </div>
-
-                                <!-- Rule Configuration -->
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 2px solid #e5e5e5;">
-                                    <div class="form-group">
-                                        <label>Rule Type *</label>
-                                        <select id="rule_type" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                            <option value="whitelist">✓ Whitelist (Only Allow)</option>
-                                            <option value="blacklist">✕ Blacklist (Deny)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Location</label>
-                                        <select id="rule_location" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                            <option value="">Any Location</option>
-                                            {% for loc in locations %}
-                                            <option value="{{ loc }}">{{ loc }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Time From</label>
-                                        <input type="time" id="rule_time_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                    </div>a
-                                    <div class="form-group">
-                                        <label>Time To</label>
-                                        <input type="time" id="rule_time_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Date From</label>
-                                        <input type="date" id="rule_date_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Date To</label>
-                                        <input type="date" id="rule_date_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
-                                    </div>
-                                    <div class="form-group" style="grid-column: 1 / -1;">
-                                        <label>Specific Dates (comma-separated)</label>
-                                        <input type="text" 
-                                            id="rule_specific_dates" 
-                                            placeholder="2025-01-15, 2025-01-20" 
-                                            style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                    <!-- Bulk Controls -->
+                                    <div class="bulk-controls">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllUsers()">
+                                            ✓ Select All
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAllUsers()">
+                                            ✕ Clear Selection
+                                        </button>
+                                        <span class="selected-indicator">
+                                            <span id="selectedUserCount" style="display: none;">0</span>
+                                            <span> selected</span>
+                                        </span>
                                     </div>
                                 </div>
                                 
-                                <!-- Submit Button -->
-                                <div style="margin-top: 20px;">
-                                    <button type="submit" class="btn btn-primary" id="bulkAddRuleBtn" style="padding: 12px 24px; font-size: 14px;">
-                                        Add Rule(s)
-                                    </button>
+                                <!-- User List -->
+                                <div id="userSelectionList" class="user-selection-list">
+                                    <div class="empty-state" style="padding: 20px;">Loading users...</div>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
 
-                        <!-- Rest of access rules section (rules list table) stays the same -->
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Access Rules List</h3>
+                            <!-- Rule Configuration -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 2px solid #e5e5e5;">
+                                <div class="form-group">
+                                    <label>Rule Type *</label>
+                                    <select id="rule_type" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                        <option value="whitelist">✓ Whitelist (Only Allow)</option>
+                                        <option value="blacklist">✕ Blacklist (Deny)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <select id="rule_location" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                        <option value="">Any Location</option>
+                                        {% for loc in locations %}
+                                        <option value="{{ loc }}">{{ loc }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Time From</label>
+                                    <input type="time" id="rule_time_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Time To</label>
+                                    <input type="time" id="rule_time_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Date From</label>
+                                    <input type="date" id="rule_date_from" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Date To</label>
+                                    <input type="date" id="rule_date_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                </div>
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>Specific Dates (comma-separated)</label>
+                                    <input type="text" 
+                                        id="rule_specific_dates" 
+                                        placeholder="2025-01-15, 2025-01-20" 
+                                        style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div style="margin-top: 20px;">
+                                <button type="submit" class="btn btn-primary" id="bulkAddRuleBtn" style="padding: 12px 24px; font-size: 14px;">
+                                    Add Rule(s)
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Access Rules List Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Access Rules List</h3>
+                    <div class="card">
                         <div class="table-container">
                             <table>
                                 <thead>
@@ -672,171 +670,171 @@
                 </div>
 
                 <div id="section-settings" class="section-hidden">
-                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">System Settings</h3>
-                    <div class="card">
-                        <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Manage system configuration and preferences</p>
-
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Appearance</h3>
-                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
-                            <div class="dark-mode-toggle">
-                                <div class="dark-mode-toggle-label">
-                                    <strong>Dark Mode</strong>
-                                    <span>Switch between light and dark theme</span>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    <!-- Appearance Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Appearance</h3>
+                    <div class="card" style="margin-bottom: 32px;">
+                        <div class="dark-mode-toggle">
+                            <div class="dark-mode-toggle-label">
+                                <strong>Dark Mode</strong>
+                                <span>Switch between light and dark theme</span>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
+                    </div>
 
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Change Password</h3>
-                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
-                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
-                                Update your admin account password
-                            </p>
-                            <form id="changePasswordForm" style="max-width: 500px;">
-                                <div class="form-group">
-                                    <label>Current Password *</label>
-                                    <input type="password" id="current_password" required placeholder="Enter current password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                </div>
-                                <div class="form-group">
-                                    <label>New Password *</label>
-                                    <input type="password" id="new_password" required placeholder="Enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    <div class="password-strength" id="passwordStrength" style="display: none; margin-top: 8px;">
-                                        <div class="strength-bar">
-                                            <div class="strength-fill" id="strengthFill"></div>
-                                        </div>
-                                        <div class="strength-text" id="strengthText"></div>
+                    <!-- Change Password Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Change Password</h3>
+                    <div class="card" style="margin-bottom: 32px;">
+                        <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                            Update your admin account password
+                        </p>
+                        <form id="changePasswordForm" style="max-width: 500px;">
+                            <div class="form-group">
+                                <label>Current Password *</label>
+                                <input type="password" id="current_password" required placeholder="Enter current password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password *</label>
+                                <input type="password" id="new_password" required placeholder="Enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                <div class="password-strength" id="passwordStrength" style="display: none; margin-top: 8px;">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="strengthFill"></div>
                                     </div>
-                                    <ul class="password-requirements" style="margin-top: 8px;">
-                                        <li id="req-length">At least 8 characters</li>
-                                        <li id="req-letter">Contains at least one letter</li>
-                                        <li id="req-special">Contains a number or special character</li>
-                                    </ul>
+                                    <div class="strength-text" id="strengthText"></div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Confirm New Password *</label>
-                                    <input type="password" id="confirm_password" required placeholder="Re-enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    <!-- Match Indicator -->
-                                    <div class="match-indicator" id="matchIndicator" style="display: none; margin-top: 8px;">
-                                        <span class="match-icon" id="matchIcon"></span>
-                                        <span id="matchText"></span>
-                                    </div>
+                                <ul class="password-requirements" style="margin-top: 8px;">
+                                    <li id="req-length">At least 8 characters</li>
+                                    <li id="req-letter">Contains at least one letter</li>
+                                    <li id="req-special">Contains a number or special character</li>
+                                </ul>
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password *</label>
+                                <input type="password" id="confirm_password" required placeholder="Re-enter new password" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                <!-- Match Indicator -->
+                                <div class="match-indicator" id="matchIndicator" style="display: none; margin-top: 8px;">
+                                    <span class="match-icon" id="matchIcon"></span>
+                                    <span id="matchText"></span>
                                 </div>
-                                <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
-                                    Change Password
-                                </button>
-                            </form>
-                        </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
+                                Change Password
+                            </button>
+                        </form>
+                    </div>
 
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Security Settings</h3>
-                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;">
-                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
-                                These settings apply to BOTH admin and user accounts
-                            </p>
+                    <!-- Security Settings Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Security Settings</h3>
+                    <div class="card" style="margin-bottom: 32px;">
+                        <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                            These settings apply to BOTH admin and user accounts
+                        </p>
+                        
+                        <div class="settings-grid">
+                            <!-- Session Management -->
+                            <div class="setting-group">
+                                <h4>Session Management</h4>
+                                <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                                    Control how long users stay logged in
+                                </p>
+                                <div class="form-group">
+                                    <label for="sessionTimeout">Session Timeout</label>
+                                    <select id="sessionTimeout" class="form-control">
+                                        <option value="15">15 minutes</option>
+                                        <option value="30" selected>30 minutes</option>
+                                        <option value="60">1 hour</option>
+                                        <option value="120">2 hours</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="updateSessionSettings()">Update Settings</button>
+                            </div>
                             
-                            <div class="settings-grid">
-                                <!-- Session Management -->
-                                <div class="setting-group">
-                                    <h4>Session Management</h4>
-                                    <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
-                                        Control how long users stay logged in
-                                    </p>
-                                    <div class="form-group">
-                                        <label for="sessionTimeout">Session Timeout</label>
-                                        <select id="sessionTimeout" class="form-control">
-                                            <option value="15">15 minutes</option>
-                                            <option value="30" selected>30 minutes</option>
-                                            <option value="60">1 hour</option>
-                                            <option value="120">2 hours</option>
-                                        </select>
-                                    </div>
-                                    <button class="btn btn-primary" onclick="updateSessionSettings()">Update Settings</button>
+                            <!-- Login Security -->
+                            <div class="setting-group">
+                                <h4>Login Security</h4>
+                                <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
+                                    Configure authentication requirements
+                                </p>
+                                
+                                <!-- 2FA Setting -->
+                                <div class="checkbox-group" style="margin-bottom: 12px;">
+                                    <input type="checkbox" id="enable2FA" checked>
+                                    <label for="enable2FA">
+                                        <strong>Require 2FA for all accounts</strong>
+                                        <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
+                                        </span>
+                                    </label>
                                 </div>
                                 
-                                <!-- Login Security -->
-                                <div class="setting-group">
-                                    <h4>Login Security</h4>
-                                    <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
-                                        Configure authentication requirements
-                                    </p>
-                                    
-                                    <!-- 2FA Setting -->
-                                    <div class="checkbox-group" style="margin-bottom: 12px;">
-                                        <input type="checkbox" id="enable2FA" checked>
-                                        <label for="enable2FA">
-                                            <strong>Require 2FA for all accounts</strong>
-                                            <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
-                                            </span>
-                                        </label>
-                                    </div>
-                                    
-                                    <!-- Lockout Policy -->
-                                    <div class="checkbox-group" style="margin-bottom: 12px;">
-                                        <input type="checkbox" id="lockoutPolicy" checked>
-                                        <label for="lockoutPolicy">
-                                            <strong>Enable account lockout</strong>
-                                            <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
-                                                Lock accounts after <strong id="lockoutThresholdDisplay">5</strong> failed attempts
-                                            </span>
-                                        </label>
-                                    </div>
-                                    
-                                    <!-- Lockout Threshold (Optional) -->
-                                    <div class="form-group" style="display: none;" id="lockoutThresholdGroup">
-                                        <label for="lockoutThreshold">Failed Attempts Threshold</label>
-                                        <select id="lockoutThreshold" class="form-control" onchange="updateLockoutThresholdDisplay()">
-                                            <option value="3">3 attempts</option>
-                                            <option value="5" selected>5 attempts</option>
-                                            <option value="7">7 attempts</option>
-                                            <option value="10">10 attempts</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <button class="btn btn-primary" onclick="updateLoginSecurity()">Update Settings</button>
-                                    
-                                    <!-- Status Indicator -->
-                                    <div id="securitySettingsStatus" style="margin-top: 12px; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
-                                        <!-- Dynamic status messages will appear here -->
-                                    </div>
+                                <!-- Lockout Policy -->
+                                <div class="checkbox-group" style="margin-bottom: 12px;">
+                                    <input type="checkbox" id="lockoutPolicy" checked>
+                                    <label for="lockoutPolicy">
+                                        <strong>Enable account lockout</strong>
+                                        <span style="display: block; font-size: 11px; color: #666; margin-top: 2px;">
+                                            Lock accounts after <strong id="lockoutThresholdDisplay">5</strong> failed attempts
+                                        </span>
+                                    </label>
+                                </div>
+                                
+                                <!-- Lockout Threshold (Optional) -->
+                                <div class="form-group" style="display: none;" id="lockoutThresholdGroup">
+                                    <label for="lockoutThreshold">Failed Attempts Threshold</label>
+                                    <select id="lockoutThreshold" class="form-control" onchange="updateLockoutThresholdDisplay()">
+                                        <option value="3">3 attempts</option>
+                                        <option value="5" selected>5 attempts</option>
+                                        <option value="7">7 attempts</option>
+                                        <option value="10">10 attempts</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn btn-primary" onclick="updateLoginSecurity()">Update Settings</button>
+                                
+                                <!-- Status Indicator -->
+                                <div id="securitySettingsStatus" style="margin-top: 12px; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
+                                    <!-- Dynamic status messages will appear here -->
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Admin Management</h3>
-                        <div class="card" style="margin-top: 0; border: 1px solid #e5e5e5;" id="adminManagementCard">
-                            <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right; ">
-                                Manage administrator accounts (First Admin Only)
-                            </p>
-                            {% if is_first_admin %}
-                            <form id="addAdminForm" style="padding: 20px;">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                                    <div class="form-group">
-                                        <label>Username *</label>
-                                        <input type="text" id="admin_username" required placeholder="Choose username" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Email *</label>
-                                        <input type="email" id="admin_email" required placeholder="admin@example.com" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Full Name *</label>
-                                        <input type="text" id="admin_name" required placeholder="Full Name" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Password *</label>
-                                        <input type="password" id="admin_password" required placeholder="Set password" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                                    </div>
+                    <!-- Admin Management Section -->
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Admin Management</h3>
+                    <div class="card" id="adminManagementCard">
+                        <p class="subtitle" style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 16px; text-align: right;">
+                            Manage administrator accounts (First Admin Only)
+                        </p>
+                        {% if is_first_admin %}
+                        <form id="addAdminForm" style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                <div class="form-group">
+                                    <label>Username *</label>
+                                    <input type="text" id="admin_username" required placeholder="Choose username" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
                                 </div>
-                                <div style="margin-top: 16px;">
-                                    <button type="submit" class="btn btn-primary">
-                                        Create Admin Account
-                                    </button>
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="admin_email" required placeholder="admin@example.com" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
                                 </div>
-                            </form>
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="admin_name" required placeholder="Full Name" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Password *</label>
+                                    <input type="password" id="admin_password" required placeholder="Set password" style="width: 100%; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                </div>
+                            </div>
+                            <div style="margin-top: 16px;">
+                                <button type="submit" class="btn btn-primary">
+                                    Create Admin Account
+                                </button>
+                            </div>
+                        </form>
 
-                            <div id="adminListContainer">
+                        <div id="adminListContainer">
                             <div class="table-container" style="margin-top: 20px;">
                                 <table>
                                     <thead>
@@ -856,15 +854,14 @@
                                     </tbody>
                                 </table>
                             </div>
-                            </div>
-                            {% else %}
-                            <div style="padding: 20px; text-align: center;">
-                                <p style="color: #666; font-style: italic;">
-                                     Only the first administrator can manage admin accounts.
-                                </p>
-                            </div>
-                            {% endif %}
                         </div>
+                        {% else %}
+                        <div style="padding: 20px; text-align: center;">
+                            <p style="color: #666; font-style: italic;">
+                                Only the first administrator can manage admin accounts.
+                            </p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

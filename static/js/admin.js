@@ -1022,7 +1022,16 @@ async function autoRefresh() {
         }
 
         if (json.active_location) {
-            document.getElementById('locationSelect').value = json.active_location;
+            const locationSelect = document.getElementById('locationSelect');
+            const locationValueEl = document.querySelector('#statCardLocation .value');
+            
+            if (locationSelect && locationSelect.value !== json.active_location) {
+                locationSelect.value = json.active_location;
+            }
+            
+            if (locationValueEl && locationValueEl.textContent !== json.active_location) {
+                locationValueEl.textContent = json.active_location;
+            }
         }
 
         if (json.daily_counts && activityChart) {
@@ -2461,9 +2470,8 @@ function initializeAdminSSE() {
 }
 
 function handleAdminScanEvent(data) {
-    console.log('[Admin SSE] 🔔 Scan event received:', data);
+    console.log('[Admin SSE] 📢 Scan event received:', data);
     
-    // Update total inside count with animation
     const totalInsideEl = document.getElementById('totalInsideCount');
     if (totalInsideEl) {
         const oldValue = parseInt(totalInsideEl.textContent) || 0;
@@ -2477,6 +2485,16 @@ function handleAdminScanEvent(data) {
                 totalInsideEl.style.animation = 'pulse 0.5s ease-in-out';
             }, 10);
         }
+    }
+    
+    const locationValueEl = document.querySelector('#statCardLocation .value');
+    if (locationValueEl && data.location) {
+        locationValueEl.textContent = data.location;
+    }
+    
+    const locationSelect = document.getElementById('locationSelect');
+    if (locationSelect && data.location) {
+        locationSelect.value = data.location;
     }
     
     updateLastActivity(data);
@@ -2494,7 +2512,6 @@ function handleAdminScanEvent(data) {
     console.log('[Admin SSE] Refreshing dashboard...');
     autoRefresh();
     
-    // **DEBUG: Check attendance section visibility**
     const attendanceSection = document.getElementById('section-attendance');
     const isAttendanceVisible = attendanceSection && !attendanceSection.classList.contains('section-hidden');
     
@@ -2507,7 +2524,7 @@ function handleAdminScanEvent(data) {
         
         setTimeout(() => {
             lastAttendanceUpdate = Date.now();
-            loadAttendance(currentPage, true); // Silent refresh
+            loadAttendance(currentPage, true);
         }, 300);
     } else {
         console.log('[Admin SSE] ⏸️ Attendance not visible, marking for refresh');
