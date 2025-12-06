@@ -4074,3 +4074,99 @@ body.dark-mode .filters select {
 body.dark-mode canvas {
   filter: brightness(1.2) contrast(0.9);
 }
+
+/* ==========================================
+   DARK MODE - SPECIFIC TEXT VISIBILITY FIXES
+   Add this to the END of global.css file
+   ========================================== */
+
+/* Fix email column text in Registered Users table */
+body.dark-mode #usersTbody td:nth-child(4) {
+  color: var(--text-primary) !important;
+}
+
+/* Fix all table cell text including email addresses */
+body.dark-mode table td {
+  color: var(--text-primary) !important;
+}
+
+/* Fix form input placeholders to be more visible */
+body.dark-mode input[type="text"]::placeholder,
+body.dark-mode input[type="email"]::placeholder,
+body.dark-mode input[type="date"]::placeholder,
+body.dark-mode input[type="time"]::placeholder,
+body.dark-mode textarea::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+/* Fix specific dates input label and text */
+body.dark-mode #rule_specific_dates {
+  color: var(--text-primary) !important;
+  background: var(--bg-input) !important;
+}
+
+/* Fix all form labels in dark mode to be white/light */
+body.dark-mode .form-group label,
+body.dark-mode label {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+/* Ensure input text is always visible in dark mode */
+body.dark-mode input[type="text"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="date"],
+body.dark-mode input[type="time"],
+body.dark-mode input[type="password"],
+body.dark-mode textarea,
+body.dark-mode select {
+  color: var(--text-primary) !important;
+}
+
+/* Fix small helper text under inputs */
+body.dark-mode small,
+body.dark-mode .help-text {
+  color: var(--text-secondary) !important;
+}
+
+/* Fix user selection list text in dark mode */
+body.dark-mode .user-selection-item {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .user-name-inline {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .user-meta-inline {
+  color: var(--text-secondary) !important; /* Grey for metadata */
+}
+
+body.dark-mode .user-meta-inline span {
+  color: var(--text-secondary) !important; /* Grey for ID and email */
+}
+
+/* Fix badge role text in dark mode - keep it white for visibility */
+body.dark-mode .badge-role {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Add separator lines between user selection items */
+.user-selection-item {
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.user-selection-item:last-child {
+  border-bottom: none;
+}
+
+/* Dark mode separator lines */
+body.dark-mode .user-selection-item {
+  border-bottom: 1px solid var(--border-primary);
+}
+
+body.dark-mode .user-selection-item:last-child {
+  border-bottom: none;
+}

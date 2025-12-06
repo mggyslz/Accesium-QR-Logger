@@ -910,12 +910,11 @@ function updateChartsForTheme() {
 
 
 async function changeLocation() {
-    if (!checkRateLimit()) {
-        showNotification('Please wait before making another request', 'Rate Limit Exceeded', 'warning');
-        return;
-    }
-
     const location = document.getElementById('locationSelect').value;
+    
+    // Update last API call time without checking (bypass rate limit for this action)
+    securityState.lastApiCall = Date.now();
+    
     try {
         const fd = createFormDataWithCSRF();
         fd.append('location', location);
