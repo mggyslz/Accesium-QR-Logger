@@ -1236,3 +1236,137 @@ def delete_admin_route(admin_id):
             'target_admin_id': admin_id
         })
         return jsonify({"status": "error", "message": "Failed to delete admin account"}), 500
+    
+@admin_bp.route('/edit-user/<int:user_id>', methods=['POST'])
+@csrf_protect
+@admin_login_required
+def edit_user_route(user_id):
+    """Admin edits an existing user"""
+    if 'admin_id' not in session:
+        return jsonify({"status": "error", "message": "Not authorized"}), 401
+    
+    try:
+        from core.database import get_user_by_id, get_user_email
+        
+        # Get current user data
+        user = get_user_by_id(user_id)
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        user_id_db, username, old_name, old_role, qr_code, qr_token, status = user
+        old_email = get_user_email(user_id)
+        
+        # Get new data from form
+        new_email = sanitize_input(request.form.get('email', ''), MAX_EMAIL_LENGTH).lower()
+        new_name = sanitize_input(request.form.get('name', ''), MAX_NAME_LENGTH)
+        new_role = sanitize_input(request.form.get('role', ''), 50)
+        
+        # Validation
+        if not new_email or not new_name or not new_role:
+            return jsonify({"status": "error", "message": "All fields are required"}), 400
+        
+        if '@' not in new_email:
+            return jsonify({"status": "error", "message": "Invalid email address"}), 400
+        
+        if new_name.strip() == '':
+            return jsonify({"status": "error", "message": "Name cannot be empty"}), 400
+        
+        if new_role not in ['Staff', 'Employee', 'Student', 'Teacher', 'Visitor']:
+            return jsonify({"status": "error", "message": "Invalid role"}), 400
+        
+        # Track what changed
+        changes = {}
+        if old_email != new_email:
+            changes['email'] = {'old': old_email or 'No email', 'new': new_email}
+        if old_name != new_name:
+            changes['name'] = {'old': old_name, 'new': new_name}
+        if old_role != new_role:
+            changes['role'] = {'old': old_role, 'new': new_role}
+        
+        # If nothing changed
+        if not changes:
+            return jsonify({"status": "info", "message": "No changes detected"}), 200
+        
+        # Update database
+        conn = get_conn()
+        try:
+            cur = conn.cursor()
+            
+            # Update user details
+            cur.execute("""
+                UPDATE users 
+                SET name = ?, role = ?
+                WHERE user_id = ?
+            """, (new_name, new_role, user_id))
+            
+            # Update email if changed
+            if 'email' in changes:
+                cur.execute("""
+                    UPDATE user_emails 
+                    SET email = ? 
+                    WHERE user_id = ?
+                """, (new_email, user_id))
+            
+            conn.commit()
+        finally:
+            conn.close()
+        
+        # Send notification email
+        from core.email_utils import send_user_profile_updated_email, is_smtp_configured
+        
+        email_sent = False
+        if is_smtp_configured() and new_email:
+            try:
+                email_sent = send_user_profile_updated_email(
+                    email=new_email,
+                    name=new_name,
+                    username=username,
+                    changes=changes,
+                    updated_by=session.get('admin_name', session.get('admin_username', 'Administrator'))
+                )
+            except Exception as e:
+                log_suspicious_activity('user_update_email_failed', {
+                    'error': str(e),
+                    'user_id': user_id
+                })
+        
+        # Log the update
+        log_suspicious_activity('user_profile_updated', {
+            'admin_id': session['admin_id'],
+            'admin_username': session.get('admin_username'),
+            'target_user_id': user_id,
+            'target_username': username,
+            'changes': changes,
+            'email_sent': email_sent
+        })
+        
+        # Build response message
+        change_summary = []
+        for field, vals in changes.items():
+            change_summary.append(f"{field.capitalize()}: {vals['old']} → {vals['new']}")
+        
+        message = f"User '{new_name}' updated successfully.<br>Changes: " + ", ".join(change_summary)
+        
+        if email_sent:
+            message += f"<br>Notification sent to {new_email}"
+        elif is_smtp_configured():
+            message += "<br>⚠️ Failed to send email notification"
+        
+        return jsonify({
+            "status": "success",
+            "message": message,
+            "changes": changes
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        log_suspicious_activity('edit_user_error', {
+            'admin_id': session.get('admin_id'),
+            'error': str(e),
+            'user_id': user_id
+        })
+        return jsonify({
+            "status": "error",
+            "message": "Failed to update user. Please try again."
+        }), 500

@@ -4170,3 +4170,62 @@ body.dark-mode .user-selection-item {
 body.dark-mode .user-selection-item:last-child {
   border-bottom: none;
 }
+
+#editUserModal .session-timeout-warning {
+    max-width: 500px;
+    width: 90%;
+}
+
+#editUserModal .form-group {
+    margin-bottom: 20px;
+}
+
+#editUserModal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+#editUserModal input,
+#editUserModal select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-input);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+#editUserModal input:focus,
+#editUserModal select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+body.dark-mode #editUserModal input,
+body.dark-mode #editUserModal select {
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border-color: var(--border-input);
+}
+
+body.dark-mode #editUserModal .session-timeout-warning {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+body.dark-mode #editUserModal h3 {
+    color: var(--text-primary);
+}
+
+body.dark-mode #editUserModal label {
+    color: var(--text-primary);
+}
+
+body.dark-mode #editUserModal small {
+    color: var(--text-secondary);
+}
+

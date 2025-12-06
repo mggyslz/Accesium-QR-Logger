@@ -214,7 +214,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Add this function to admin.js
 async function loadUsers(page = 1) {
     if (isLoadingUsers) return;
     isLoadingUsers = true;
@@ -225,7 +224,6 @@ async function loadUsers(page = 1) {
     try {
         const search = document.getElementById('searchInput').value.toLowerCase();
         
-        // Filter users from cache
         let filteredUsers = allUsersCache;
         
         if (search) {
@@ -236,7 +234,6 @@ async function loadUsers(page = 1) {
             });
         }
         
-        // Calculate pagination
         const totalRecords = filteredUsers.length;
         totalUserPages = Math.max(1, Math.ceil(totalRecords / usersPerPage));
         currentUserPage = Math.min(page, totalUserPages);
@@ -245,7 +242,6 @@ async function loadUsers(page = 1) {
         const endIndex = startIndex + usersPerPage;
         const pageUsers = filteredUsers.slice(startIndex, endIndex);
         
-        // Render users
         const tbody = document.getElementById('usersTbody');
         tbody.innerHTML = '';
         
@@ -257,7 +253,6 @@ async function loadUsers(page = 1) {
                 tr.setAttribute('data-name', user.name.toLowerCase());
                 tr.setAttribute('data-role', user.role.toLowerCase());
                 
-                // Build QR code cell
                 let qrCell = '';
                 if (user.qr_filename) {
                     qrCell = `
@@ -269,6 +264,9 @@ async function loadUsers(page = 1) {
                     qrCell = '<img src="/static/img/no_qr.png" alt="No QR" class="qr">';
                 }
                 
+                const escapedName = user.name.replace(/'/g, "\\'");
+                const escapedEmail = (user.email || '').replace(/'/g, "\\'");
+                
                 tr.innerHTML = `
                     <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:12px;">${user.username}</code></td>
                     <td><strong>${user.name}</strong></td>
@@ -277,17 +275,26 @@ async function loadUsers(page = 1) {
                     <td>${user.status}</td>
                     <td>${qrCell}</td>
                     <td>
-                        <button class="btn btn-secondary" onclick="resetUserPassword(${user.user_id}, '${user.name}', '${user.email || ''}')" style="margin-right: 8px;">
+                        <button class="btn btn-secondary" 
+                                onclick="editUser(${user.user_id}, '${escapedName}', '${user.role}', '${escapedEmail}')" 
+                                style="margin-right: 8px;">
+                            Edit
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="resetUserPassword(${user.user_id}, '${escapedName}', '${escapedEmail}')" 
+                                style="margin-right: 8px;">
                             Reset Password
                         </button>
-                        <button class="btn btn-danger" onclick="deleteUser(${user.user_id})">Delete</button>
+                        <button class="btn btn-danger" 
+                                onclick="deleteUser(${user.user_id})">
+                            Delete
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
         
-        // Update pagination controls
         document.getElementById('userPageInfo').textContent = `Page ${currentUserPage} of ${totalUserPages}`;
         document.getElementById('prevUserBtn').disabled = currentUserPage <= 1;
         document.getElementById('nextUserBtn').disabled = currentUserPage >= totalUserPages;
@@ -907,8 +914,6 @@ function updateChartsForTheme() {
     }
 }
 
-
-
 async function changeLocation() {
     const location = document.getElementById('locationSelect').value;
     
@@ -1196,6 +1201,106 @@ function exportAttendanceExcel() {
 
     logSecurityEvent('DATA_EXPORTED', 'Exported attendance data to Excel');
 }
+
+// Add at the top with other global variables
+let editingUserId = null;
+
+// Add these functions anywhere in the file
+
+function editUser(userId, currentName, currentRole, currentEmail) {
+    editingUserId = userId;
+    
+    // Populate modal fields
+    document.getElementById('edit_user_name').value = currentName;
+    document.getElementById('edit_user_role').value = currentRole;
+    document.getElementById('edit_user_email').value = currentEmail || '';
+    
+    // Update modal title
+    document.getElementById('editUserModalTitle').textContent = `Edit User: ${currentName}`;
+    
+    // Show modal
+    document.getElementById('editUserModal').classList.remove('section-hidden');
+}
+
+function closeEditModal() {
+    editingUserId = null;
+    document.getElementById('editUserModal').classList.add('section-hidden');
+    document.getElementById('editUserForm').reset();
+}
+
+async function submitEditUser(event) {
+    event.preventDefault();
+    
+    if (!editingUserId) {
+        showNotification('No user selected for editing', 'Error', 'danger');
+        return;
+    }
+    
+    if (!checkRateLimit()) {
+        showNotification('Please wait before making another request', 'Rate Limit', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('edit_user_name').value.trim();
+    const role = document.getElementById('edit_user_role').value;
+    const email = document.getElementById('edit_user_email').value.trim();
+    
+    // Validation
+    if (!name || !role || !email) {
+        showNotification('All fields are required', 'Validation Error', 'warning');
+        return;
+    }
+    
+    if (!email.includes('@')) {
+        showNotification('Please enter a valid email address', 'Validation Error', 'warning');
+        return;
+    }
+    
+    const button = event.target.querySelector('button[type="submit"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.innerHTML = '<span class="loading"></span> Updating...';
+    
+    try {
+        const fd = createFormDataWithCSRF();
+        fd.append('name', name);
+        fd.append('role', role);
+        fd.append('email', email);
+        
+        const res = await fetch(`/admin/edit-user/${editingUserId}`, {
+            method: 'POST',
+            body: fd
+        });
+        
+        const json = await res.json();
+        
+        if (json.status === 'success' || json.status === 'info') {
+            showNotification(json.message, 'User Updated ✓', 'success');
+            
+            logSecurityEvent('USER_UPDATED', `Updated user ID: ${editingUserId} - ${name}`);
+            
+            closeEditModal();
+            
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification(json.message || 'Failed to update user', 'Error', 'danger');
+        }
+    } catch (err) {
+        console.error('Edit user error:', err);
+        showNotification('Failed to update user: ' + err.message, 'Error', 'danger');
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+// Initialize edit form (add to existing DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', function() {
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', submitEditUser);
+    }
+});
 
 async function deleteUser(userId) {
     if (!confirm('Are you sure you want to delete this user?')) return;

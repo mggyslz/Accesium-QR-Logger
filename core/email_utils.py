@@ -525,3 +525,93 @@ def clean_expired_codes():
         conn.commit()
     finally:
         conn.close()
+        
+def send_user_profile_updated_email(email: str, name: str, username: str, changes: dict, updated_by: str) -> bool:
+    """Send email notification when user profile is updated by admin"""
+    subject = "Your Account Has Been Updated - QR Access Logger"
+    
+    # Build changes list HTML
+    changes_html = ""
+    for field, vals in changes.items():
+        field_name = field.capitalize()
+        old_value = vals['old']
+        new_value = vals['new']
+        
+        changes_html += f"""
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #666; text-align: right; width: 120px;">
+                    {field_name}:
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+                    <span style="color: #999; text-decoration: line-through;">{old_value}</span>
+                    <span style="margin: 0 8px; color: #666;">→</span>
+                    <span style="color: #2c2c2c; font-weight: 600;">{new_value}</span>
+                </td>
+            </tr>
+        """
+    
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: #2c2c2c; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }}
+            .changes-box {{ background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin: 20px 0; overflow: hidden; }}
+            .changes-table {{ width: 100%; border-collapse: collapse; }}
+            .info-box {{ background: white; border-left: 4px solid #2c2c2c; padding: 16px; margin: 20px 0; border-radius: 4px; }}
+            .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }}
+            .button {{ display: inline-block; background: #2c2c2c; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: 600; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin: 0; font-size: 24px;">Profile Updated</h1>
+            </div>
+            <div class="content">
+                <p style="font-size: 16px;">Hello <strong>{name}</strong>,</p>
+                <p>Your account information has been updated by <strong>{updated_by}</strong>.</p>
+                
+                <div class="changes-box">
+                    <table class="changes-table">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th colspan="2" style="padding: 12px; text-align: left; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Changes Made
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {changes_html}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box">
+                    <strong>Account Details:</strong><br>
+                    <p style="margin: 10px 0 0 0; font-size: 14px;">
+                        <strong>Username:</strong> {username}<br>
+                        <strong>Email:</strong> {email}
+                    </p>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-left: 4px solid #2c2c2c; border-radius: 4px;">
+                    <strong>Important:</strong><br>
+                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #666;">
+                        If you did not request these changes or believe this was done in error, 
+                        please contact your system administrator immediately.
+                    </p>
+                </div>
+            </div>
+            <div class="footer">
+                <p>This is an automated message from QR Access Logger System</p>
+                <p style="margin-top: 8px;">Update performed on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return send_email(email, subject, html_body, html=True)
