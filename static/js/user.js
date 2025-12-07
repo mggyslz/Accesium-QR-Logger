@@ -124,81 +124,96 @@ function handleSSEEvent(event) {
 function handleProfileUpdateEvent(data) {
     console.log('[SSE] 🔔 Profile update received!');
     console.log('[SSE] Data:', data);
-    console.log('[SSE] Name changed to:', data.name);
-    console.log('[SSE] Role changed to:', data.role);
     
-    // Count how many elements we're updating
     let updatedCount = 0;
     
-    // Update ALL name displays if changed
+    // ✅ UPDATE NAME
     if (data.name) {
-        // Update welcome message
+        // 1. Welcome section heading - "Welcome back, FirstName!"
         const welcomeHeading = document.querySelector('.welcome-section h2');
         if (welcomeHeading) {
-            console.log('[SSE] ✅ Updating welcome heading');
-            welcomeHeading.textContent = `Welcome back, ${data.name.split(' ')[0]}!`;
-            updatedCount++;
-        }
-        
-        // Update topbar user info
-        const topbarName = document.querySelector('.user-info h3');
-        if (topbarName) {
-            console.log('[SSE] ✅ Updating topbar name');
-            topbarName.textContent = data.name;
-            updatedCount++;
-        }
-        
-        // Update QR section full name
-        document.querySelectorAll('.qr-detail-item').forEach(item => {
-            const label = item.querySelector('label');
-            const span = item.querySelector('span');
-            if (label && span && label.textContent === 'Full Name') {
-                console.log('[SSE] ✅ Updating QR section name');
-                span.textContent = data.name;
+            const firstName = data.name.split(' ')[0];
+            const currentText = welcomeHeading.textContent;
+            if (!currentText.includes(firstName)) {
+                console.log('[SSE] ✅ Updating welcome heading');
+                welcomeHeading.textContent = `Welcome back, ${firstName}!`;
+                highlightElement(welcomeHeading);
                 updatedCount++;
             }
-        });
+        }
         
-        // Update profile form if visible
+        // 2. Topbar user info - top right corner
+        const topbarName = document.querySelector('.user-info h3');
+        if (topbarName && topbarName.textContent !== data.name) {
+            console.log('[SSE] ✅ Updating topbar name');
+            topbarName.textContent = data.name;
+            highlightElement(topbarName);
+            updatedCount++;
+        }
+        
+        // 3. Profile form name input
         const nameInput = document.getElementById('name');
         if (nameInput && nameInput.value !== data.name) {
             console.log('[SSE] ✅ Updating profile form name');
             nameInput.value = data.name;
             updatedCount++;
         }
+        
+        // 4. QR section - Full Name
+        const qrDetailItems = document.querySelectorAll('.qr-detail-item');
+        qrDetailItems.forEach(item => {
+            const label = item.querySelector('label');
+            const span = item.querySelector('span');
+            if (label && span && label.textContent.trim() === 'Full Name' && span.textContent !== data.name) {
+                console.log('[SSE] ✅ Updating QR section full name');
+                span.textContent = data.name;
+                highlightElement(span);
+                updatedCount++;
+            }
+        });
     }
     
-    // Update ALL role displays if changed
+    // ✅ UPDATE ROLE
     if (data.role) {
-        // Update dashboard role display
-        document.querySelectorAll('.user-meta-item').forEach(item => {
+        // 1. Dashboard role display - in user-meta section
+        const userMetaItems = document.querySelectorAll('.user-meta-item');
+        userMetaItems.forEach(item => {
             const label = item.querySelector('label');
             const span = item.querySelector('span');
-            if (label && span && label.textContent === 'Role:') {
+            if (label && span && label.textContent.trim() === 'Role:' && span.textContent !== data.role) {
                 console.log('[SSE] ✅ Updating dashboard role');
                 span.textContent = data.role;
+                highlightElement(span);
                 updatedCount++;
             }
         });
         
-        // Update QR section role
-        document.querySelectorAll('.qr-detail-item').forEach(item => {
-            const label = item.querySelector('label');
-            const span = item.querySelector('span');
-            if (label && span && label.textContent === 'Role') {
-                console.log('[SSE] ✅ Updating QR section role');
-                span.textContent = data.role;
-                updatedCount++;
-            }
-        });
-        
-        // Update profile form role display
+        // 2. Profile form role input (disabled field)
         const roleInput = document.getElementById('role');
         if (roleInput && roleInput.value !== data.role) {
             console.log('[SSE] ✅ Updating profile form role');
             roleInput.value = data.role;
             updatedCount++;
         }
+        
+        // 3. QR section - Role
+        const qrDetailItems = document.querySelectorAll('.qr-detail-item');
+        qrDetailItems.forEach(item => {
+            const label = item.querySelector('label');
+            const span = item.querySelector('span');
+            if (label && span && label.textContent.trim() === 'Role' && span.textContent !== data.role) {
+                console.log('[SSE] ✅ Updating QR section role');
+                span.textContent = data.role;
+                highlightElement(span);
+                updatedCount++;
+            }
+        });
+    }
+    
+    // ✅ UPDATE EMAIL (if displayed)
+    if (data.email) {
+        console.log('[SSE] Email update received:', data.email);
+        // Email is not currently displayed in user.html, but logged for debugging
     }
     
     console.log(`[SSE] 📊 Total elements updated: ${updatedCount}`);
@@ -206,34 +221,28 @@ function handleProfileUpdateEvent(data) {
     // Show notification
     showProfessionalNotification(
         'Profile Updated',
-        'Your profile has been updated by an administrator',
+        `Your ${data.name ? 'name' : ''}${data.name && data.role ? ' and ' : ''}${data.role ? 'role' : ''} ${data.name || data.role ? 'have' : 'has'} been updated by an administrator`,
         NotificationType.INFO
     );
     
-    // Visual feedback - highlight changed elements
-    const changedElements = [];
-    if (data.name) {
-        const nameEl = document.querySelector('.user-info h3');
-        if (nameEl) changedElements.push(nameEl);
-    }
-    if (data.role) {
-        const roleEl = document.querySelector('.user-meta-item span');
-        if (roleEl) changedElements.push(roleEl);
-    }
-    
-    changedElements.forEach(el => {
-        el.style.transition = 'all 0.3s ease';
-        el.style.backgroundColor = '#fff3cd';
-        el.style.padding = '4px 8px';
-        el.style.borderRadius = '4px';
-        
-        setTimeout(() => {
-            el.style.backgroundColor = '';
-            el.style.padding = '';
-        }, 2000);
-    });
-    
     console.log('[SSE] ✅ Profile update handling complete!');
+}
+
+// Helper function to highlight changed elements
+function highlightElement(element) {
+    if (!element) return;
+    
+    element.style.transition = 'all 0.5s ease';
+    element.style.backgroundColor = '#fff3cd';
+    element.style.padding = '4px 8px';
+    element.style.borderRadius = '4px';
+    element.style.boxShadow = '0 0 10px rgba(255, 193, 7, 0.5)';
+    
+    setTimeout(() => {
+        element.style.backgroundColor = '';
+        element.style.padding = '';
+        element.style.boxShadow = '';
+    }, 3000);
 }
 
 function handleScanEvent(data) {

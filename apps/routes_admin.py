@@ -1341,16 +1341,21 @@ def edit_user_route(user_id):
                     'user_id': user_id
                 })
         
-        # ✅ NEW: Send real-time SSE notification to user
         try:
-            from routes_sse import notify_user_profile_changed
-            notify_user_profile_changed(user_id, {
+            import routes_sse
+            routes_sse.notify_user_profile_changed(user_id, {
                 'name': new_name,
                 'role': new_role,
                 'email': new_email
             })
+            print(f"[Admin] ✅ SSE notification sent to user {user_id}")
+        except ImportError as ie:
+            print(f"[Admin] ⚠️ SSE module not available: {ie}")
+        except AttributeError as ae:
+            print(f"[Admin] ⚠️ SSE function not found: {ae}")
         except Exception as e:
-            print(f"[Admin] Failed to send SSE notification: {e}")
+            print(f"[Admin] ⚠️ Failed to send SSE notification: {e}")
+
         
         # Log the update
         log_suspicious_activity('user_profile_updated', {
