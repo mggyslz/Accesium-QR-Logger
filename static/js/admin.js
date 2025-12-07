@@ -2524,12 +2524,6 @@ function handleAdminSSEEvent(event) {
     }
 }
 
-/**
- * Handle scan events for admin dashboard
- */
-javascript/**
- * Initialize SSE connection for admin real-time updates
- */
 function initializeAdminSSE() {
     if (adminEventSource) {
         console.log('[Admin SSE] Closing existing connection');

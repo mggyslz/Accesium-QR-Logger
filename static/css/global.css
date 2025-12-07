@@ -254,6 +254,26 @@ body.dark-mode .topbar-right .user-info::after {
   opacity: 1;
 }
 
+body.dark-mode .menu-item:hover {
+  background: var(--hover-bg);
+  color: rgba(255, 255, 255, 0.7); 
+  border-left-color: var(--text-white);
+}
+
+body.dark-mode .menu-item:hover svg {
+  opacity: 0.7; 
+}
+
+body.dark-mode .menu-item.active {
+  background: var(--active-bg);
+  color: rgba(255, 255, 255, 0.7); 
+  border-left-color: var(--text-white);
+}
+
+body.dark-mode .menu-item.active svg {
+  opacity: 0.7;
+}
+
 .menu-item.active {
   background: var(--active-bg);
   color: var(--text-white);
@@ -371,7 +391,6 @@ body.dark-mode .topbar-right .user-info::after {
   color: var(--text-secondary);
 }
 
-/* Content Area */
 .content-area {
   padding: var(--spacing-xxl);
 }
@@ -459,7 +478,6 @@ body.dark-mode .topbar-right .user-info::after {
   top: 0;
 }
 
-/* Hover colors matching icon colors - Light Mode */
 #statCardInside:hover::before,
 .stat-card:has(.icon-inside):hover::before {
   background: #4caf50 !important;
@@ -500,7 +518,6 @@ body.dark-mode .topbar-right .user-info::after {
   background: #3f51b5 !important;
 }
 
-/* Dark mode hover colors - brighter versions */
 body.dark-mode #statCardInside:hover::before,
 body.dark-mode .stat-card:has(.icon-inside):hover::before {
   background: #66bb6a !important;
@@ -838,7 +855,6 @@ tbody tr:hover {
   letter-spacing: 0.5px;
 }
 
-/* Green and Red badges for IN/OUT - LIGHT MODE */
 .badge-in {
   background: rgba(76, 175, 80, 0.15);
   color: #2e7d32;
@@ -880,7 +896,6 @@ body.dark-mode .badge-out {
   letter-spacing: 0.5px;
 }
 
-/* Status badges - LIGHT MODE */
 .status-in {
   background: rgba(76, 175, 80, 0.15);
   color: #2e7d32;
@@ -899,7 +914,6 @@ body.dark-mode .badge-out {
   border: 1px solid var(--border-primary);
 }
 
-/* Status badges - DARK MODE */
 body.dark-mode .status-in {
   background: rgba(76, 175, 80, 0.2);
   color: #66bb6a;
@@ -987,7 +1001,6 @@ body.dark-mode .status-unknown {
   border-radius: 50%;
 }
 
-/* Green when checked (dark mode ON) */
 .toggle-switch input:checked + .toggle-slider {
   background-color: #4caf50;
 }
@@ -996,12 +1009,10 @@ body.dark-mode .status-unknown {
   transform: translateX(24px);
 }
 
-/* Dark mode specific toggle styles */
 body.dark-mode .toggle-slider {
   background-color: var(--text-secondary);
 }
 
-/* Green in dark mode when checked */
 body.dark-mode .toggle-switch input:checked + .toggle-slider {
   background-color: #66bb6a;
 }
@@ -1082,6 +1093,11 @@ body.dark-mode #lastActivityTime::before {
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
 }
 
+body.dark-mode #lastActivityTime,
+body.dark-mode #lastActivityAction {
+  color: var(--text-primary) !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .last-activity-box {
@@ -1099,7 +1115,7 @@ body.dark-mode #lastActivityTime::before {
 }
 
 /* ==========================================
-   SPECIFIC COMPONENTS (with proper CSS variables)
+   SPECIFIC COMPONENTS 
    ========================================== */
 
 /* QR Code */
@@ -1414,7 +1430,6 @@ img.qr {
   color: var(--color-danger);
 }
 
-/* Session Timeout Warning Modal */
 .session-timeout-warning {
   position: fixed;
   top: 50%;
@@ -1424,12 +1439,12 @@ img.qr {
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-large);
-  z-index: 10001; /* Higher than overlay */
+  z-index: 10001; 
   text-align: center;
   max-width: 400px;
   width: 90%;
   border: 1px solid var(--border-primary);
-  display: block; /* Changed from default */
+  display: block; 
 }
 
 .session-timeout-warning h3 {
@@ -1442,7 +1457,6 @@ img.qr {
   color: var(--text-secondary);
 }
 
-/* Overlay for modal background */
 .overlay {
   position: fixed;
   top: 0;
@@ -1451,12 +1465,11 @@ img.qr {
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   z-index: 10000;
-  display: block; /* Changed from default */
+  display: block; 
 }
 
-/* Hidden state for sections and modals */
 .section-hidden {
-  display: none !important; /* Force hide with !important */
+  display: none !important; 
 }
 
 .overlay {
@@ -2711,7 +2724,6 @@ body.error-page {
   }
 }
 
-/* Smooth transitions for theme switching */
 body,
 .sidebar,
 .topbar,
@@ -2727,7 +2739,6 @@ body,
               border-color var(--transition-normal);
 }
 
-/* Smooth transitions for theme switching */
 body,
 .sidebar,
 .topbar,
@@ -2743,7 +2754,6 @@ body,
               border-color var(--transition-normal);
 }
 
-/* Smooth transitions for theme switching */
 body,
 .sidebar,
 .topbar,
@@ -2759,7 +2769,6 @@ body,
               border-color var(--transition-normal);
 }
 
-/* Smooth transitions for theme switching */
 body,
 .sidebar,
 .topbar,
@@ -2984,7 +2993,6 @@ body.scanner-page {
   letter-spacing: 0.5px;
 }
 
-/* Status Indicator Dot */
 #result::before {
   content: '';
   width: 10px;
@@ -3007,7 +3015,6 @@ body.scanner-page {
   }
 }
 
-/* Success state - faster pulse */
 #result.success::before {
   background: #00ff88;
   animation: pulse-success 0.5s ease-in-out 3;
@@ -3159,7 +3166,6 @@ body.scanner-page {
 
 /* ==========================================
    RECENT LOCATION CARD
-   Add this to the END of global.css file
    ========================================== */
 .recent-location-card {
   margin-bottom: 24px;
@@ -3218,9 +3224,9 @@ body.scanner-page {
   }
 }
 
-/* ==========================================
-   ACTIVITY HEATMAP - OPTIMIZED FOR 1920x1080
-   ========================================== */
+/* =======================
+   ACTIVITY HEATMAP
+   ======================= */
 .activity-heatmap-card {
   margin-bottom: 24px;
 }
@@ -3241,7 +3247,7 @@ body.scanner-page {
   height: 14px;
   align-items: flex-end;
   position: relative;
-  margin-left: 20px; /* Account for day labels */
+  margin-left: 20px; 
 }
 
 .month-label {
@@ -3283,7 +3289,7 @@ body.scanner-page {
   flex: 1;
   overflow-x: auto;
   padding-bottom: 6px;
-  min-height: 84px; /* 7 days * 12px height */
+  min-height: 84px; 
 }
 
 .heatmap-month-group {
@@ -3328,7 +3334,6 @@ body.scanner-page {
   border-color: var(--color-primary);
 }
 
-/* GitHub-style green color levels - LIGHT MODE */
 .heatmap-day.level-0 {
   background: #ebedf0;
   border: 1px solid #e1e4e8;
@@ -3532,11 +3537,10 @@ body.dark-mode .legend-square.level-4 {
   }
   
   .heatmap-grid {
-    min-height: 70px; /* 7 days * 10px height */
+    min-height: 70px; 
   }
 }
 
-/* Password Input with Toggle - Like Facebook/Instagram */
 .password-input-wrapper {
   position: relative;
 }
@@ -3694,7 +3698,6 @@ body.dark-mode .stat-card-icon.icon-status {
   flex: 1;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .stat-card-icon {
     width: 38px;
@@ -3708,11 +3711,6 @@ body.dark-mode .stat-card-icon.icon-status {
 }
 
 
-/* ==========================================
-   DARK MODE FIXES - ALL LABELS AND TEXT
-   ========================================== */
-
-/* Force all labels to use correct text color */
 body.dark-mode label,
 body.dark-mode .location-selector label,
 body.dark-mode .form-group label,
@@ -3726,7 +3724,6 @@ body.dark-mode .activity-label {
   color: var(--text-primary) !important;
 }
 
-/* Fix location selector in dark mode */
 body.dark-mode .location-selector {
   background: var(--bg-tertiary);
   border-color: var(--border-primary);
@@ -3741,7 +3738,6 @@ body.dark-mode .location-selector select {
   color: var(--text-primary);
 }
 
-/* Fix all form inputs in dark mode */
 body.dark-mode input,
 body.dark-mode select,
 body.dark-mode textarea {
@@ -3755,7 +3751,6 @@ body.dark-mode textarea::placeholder {
   color: var(--text-tertiary);
 }
 
-/* Fix password toggle visibility in dark mode */
 body.dark-mode .password-toggle {
   color: var(--text-secondary);
 }
@@ -3764,7 +3759,6 @@ body.dark-mode .password-toggle:hover {
   color: var(--text-primary);
 }
 
-/* Fix stat cards in dark mode */
 body.dark-mode .stat-card label {
   color: var(--text-tertiary);
 }
@@ -3773,13 +3767,11 @@ body.dark-mode .stat-card .value {
   color: var(--text-primary);
 }
 
-/* Fix checkbox labels in dark mode */
 body.dark-mode .checkbox-group label,
 body.dark-mode .role-filter-label {
   color: var(--text-primary);
 }
 
-/* Fix info boxes in dark mode */
 body.dark-mode .info-box,
 body.dark-mode .info-banner {
   background: var(--bg-tertiary);
@@ -3792,18 +3784,15 @@ body.dark-mode .info-box strong {
   color: var(--text-primary);
 }
 
-/* Fix table headers in dark mode */
 body.dark-mode th {
   background: var(--bg-tertiary);
   color: var(--text-secondary);
 }
 
-/* Fix empty states in dark mode */
 body.dark-mode .empty-state {
   color: var(--text-tertiary);
 }
 
-/* Fix card headers and subtitles in dark mode */
 body.dark-mode .card-header h3,
 body.dark-mode .card-header h4,
 body.dark-mode .setting-group h4 {
@@ -3814,12 +3803,10 @@ body.dark-mode .subtitle {
   color: var(--text-secondary);
 }
 
-/* Fix password requirements list in dark mode */
 body.dark-mode .password-requirements li {
   color: var(--text-primary);
 }
 
-/* Fix validation summary in dark mode */
 body.dark-mode .validation-summary {
   background: var(--bg-tertiary);
   border-color: var(--border-primary);
@@ -3829,7 +3816,6 @@ body.dark-mode .validation-header {
   color: var(--text-primary);
 }
 
-/* Fix alert boxes in dark mode */
 body.dark-mode .password-alert {
   background: var(--bg-warning);
   border-color: var(--border-warning);
@@ -3841,7 +3827,6 @@ body.dark-mode .alert-list li {
   color: var(--color-warning);
 }
 
-/* Professional Notification System (Dark Mode Support) */
 .professional-notification {
   position: fixed;
   top: 20px;
@@ -3853,7 +3838,6 @@ body.dark-mode .alert-list li {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Dark mode notification styles */
 body.dark-mode .professional-notification {
   background: var(--bg-card);
   border-color: var(--border-primary);
@@ -3876,18 +3860,12 @@ body.dark-mode .professional-notification button:hover {
   color: var(--text-primary);
 }
 
-/* ==========================================
-   ADDITIONAL DARK MODE FIXES - VISIBILITY
-   ========================================== */
-
-/* Fix username code blocks in dark mode */
 body.dark-mode code {
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-primary);
 }
 
-/* Fix all placeholder text in dark mode */
 body.dark-mode input::placeholder,
 body.dark-mode textarea::placeholder,
 body.dark-mode select::placeholder {
@@ -3895,7 +3873,6 @@ body.dark-mode select::placeholder {
   opacity: 0.7;
 }
 
-/* Fix table cell text in dark mode */
 body.dark-mode td {
   color: var(--text-primary);
 }
@@ -3904,7 +3881,6 @@ body.dark-mode td strong {
   color: var(--text-primary);
 }
 
-/* Fix badge text in dark mode */
 body.dark-mode .badge {
   background: var(--bg-tertiary);
   color: var(--text-primary);
@@ -3922,7 +3898,6 @@ body.dark-mode .badge-out {
   border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
-/* Fix status badges in dark mode */
 body.dark-mode .status-badge {
   color: var(--text-primary);
 }
@@ -3945,12 +3920,10 @@ body.dark-mode .status-unknown {
   border-color: var(--border-primary);
 }
 
-/* Fix page info text in dark mode */
 body.dark-mode .page-info {
   color: var(--text-primary);
 }
 
-/* Fix QR code download links in dark mode */
 body.dark-mode a {
   color: var(--text-primary);
 }
@@ -3959,13 +3932,11 @@ body.dark-mode a:hover {
   color: var(--color-primary);
 }
 
-/* Fix small text and helper text in dark mode */
 body.dark-mode small,
 body.dark-mode .note {
   color: var(--text-secondary);
 }
 
-/* Fix device card details in dark mode */
 body.dark-mode .device-details {
   color: var(--text-secondary);
 }
@@ -3978,7 +3949,6 @@ body.dark-mode .device-name {
   color: var(--text-primary);
 }
 
-/* Fix welcome section in dark mode */
 body.dark-mode .welcome-section h2 {
   color: var(--text-primary);
 }
@@ -3987,7 +3957,6 @@ body.dark-mode .welcome-section p {
   color: var(--text-secondary);
 }
 
-/* Fix user meta items in dark mode */
 body.dark-mode .user-meta-item label {
   color: var(--text-tertiary);
 }
@@ -3996,7 +3965,6 @@ body.dark-mode .user-meta-item span {
   color: var(--text-primary);
 }
 
-/* Fix activity log text in dark mode */
 body.dark-mode .activity-log {
   color: var(--text-secondary);
 }
@@ -4006,13 +3974,11 @@ body.dark-mode #lastActivityAction {
   color: var(--text-primary);
 }
 
-/* Fix card titles in dark mode */
 body.dark-mode h3,
 body.dark-mode h4 {
   color: var(--text-primary);
 }
 
-/* Fix security audit log in dark mode */
 body.dark-mode .security-audit-log {
   background: var(--bg-tertiary);
   border-color: var(--border-primary);
@@ -4039,13 +4005,11 @@ body.dark-mode .audit-details {
   color: var(--text-secondary);
 }
 
-/* Fix select options in dark mode */
 body.dark-mode select option {
   background: var(--bg-input);
   color: var(--text-primary);
 }
 
-/* Fix disabled inputs in dark mode */
 body.dark-mode input:disabled,
 body.dark-mode select:disabled {
   background: var(--bg-tertiary) !important;
@@ -4053,7 +4017,6 @@ body.dark-mode select:disabled {
   opacity: 0.6;
 }
 
-/* Fix topbar user info in dark mode */
 body.dark-mode .user-info-top h3 {
   color: var(--text-primary);
 }
@@ -4062,7 +4025,6 @@ body.dark-mode .user-info-top p {
   color: var(--text-secondary);
 }
 
-/* Fix filter inputs text in dark mode */
 body.dark-mode .filters input,
 body.dark-mode .filters select {
   background: var(--bg-input);
@@ -4070,27 +4032,18 @@ body.dark-mode .filters select {
   border-color: var(--border-primary);
 }
 
-/* Fix chart.js canvas text (via inline override) */
 body.dark-mode canvas {
   filter: brightness(1.2) contrast(0.9);
 }
 
-/* ==========================================
-   DARK MODE - SPECIFIC TEXT VISIBILITY FIXES
-   Add this to the END of global.css file
-   ========================================== */
-
-/* Fix email column text in Registered Users table */
 body.dark-mode #usersTbody td:nth-child(4) {
   color: var(--text-primary) !important;
 }
 
-/* Fix all table cell text including email addresses */
 body.dark-mode table td {
   color: var(--text-primary) !important;
 }
 
-/* Fix form input placeholders to be more visible */
 body.dark-mode input[type="text"]::placeholder,
 body.dark-mode input[type="email"]::placeholder,
 body.dark-mode input[type="date"]::placeholder,
@@ -4100,20 +4053,17 @@ body.dark-mode textarea::placeholder {
   opacity: 1 !important;
 }
 
-/* Fix specific dates input label and text */
 body.dark-mode #rule_specific_dates {
   color: var(--text-primary) !important;
   background: var(--bg-input) !important;
 }
 
-/* Fix all form labels in dark mode to be white/light */
 body.dark-mode .form-group label,
 body.dark-mode label {
   color: var(--text-primary) !important;
   font-weight: 600;
 }
 
-/* Ensure input text is always visible in dark mode */
 body.dark-mode input[type="text"],
 body.dark-mode input[type="email"],
 body.dark-mode input[type="date"],
@@ -4124,13 +4074,12 @@ body.dark-mode select {
   color: var(--text-primary) !important;
 }
 
-/* Fix small helper text under inputs */
 body.dark-mode small,
 body.dark-mode .help-text {
   color: var(--text-secondary) !important;
 }
 
-/* Fix user selection list text in dark mode */
+
 body.dark-mode .user-selection-item {
   color: var(--text-primary) !important;
 }
@@ -4140,20 +4089,18 @@ body.dark-mode .user-name-inline {
 }
 
 body.dark-mode .user-meta-inline {
-  color: var(--text-secondary) !important; /* Grey for metadata */
+  color: var(--text-secondary) !important;
 }
 
 body.dark-mode .user-meta-inline span {
-  color: var(--text-secondary) !important; /* Grey for ID and email */
+  color: var(--text-secondary) !important; 
 }
 
-/* Fix badge role text in dark mode - keep it white for visibility */
 body.dark-mode .badge-role {
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
 }
 
-/* Add separator lines between user selection items */
 .user-selection-item {
   border-bottom: 1px solid var(--border-secondary);
 }
@@ -4162,7 +4109,6 @@ body.dark-mode .badge-role {
   border-bottom: none;
 }
 
-/* Dark mode separator lines */
 body.dark-mode .user-selection-item {
   border-bottom: 1px solid var(--border-primary);
 }

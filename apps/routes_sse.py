@@ -149,3 +149,15 @@ def admin_stream():
 def cleanup_inactive_queues():
     """Cleanup queues that haven't been used (call periodically if needed)"""
     pass
+
+def notify_user_profile_changed(user_id: int, changes: dict):
+    """Notify user that their profile was updated by admin"""
+    try:
+        broadcast_to_user(user_id, 'profile_updated', {
+            'name': changes.get('name'),
+            'role': changes.get('role'),
+            'email': changes.get('email')
+        })
+        print(f"[SSE] Sent profile update notification to user {user_id}")
+    except Exception as e:
+        print(f"[SSE] Failed to notify user {user_id}: {e}")

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: https://cdn.jsdelivr.net;">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
     {{ inject_csrf_meta_tag()|safe }}
     <title>Admin Dashboard</title>
@@ -453,7 +454,57 @@
                         </div>
                     </div>
                 </div>
-
+                <!-- Edit User Modal -->
+                <div id="editUserModal" class="section-hidden">
+                    <div class="overlay" onclick="closeEditModal()"></div>
+                    <div class="session-timeout-warning" style="max-width: 500px;">
+                        <h3 id="editUserModalTitle">Edit User</h3>
+                        <form id="editUserForm" style="text-align: left; margin-top: 20px;">
+                            <div class="form-group">
+                                <label for="edit_user_name">Full Name *</label>
+                                <input type="text" 
+                                    id="edit_user_name" 
+                                    required 
+                                    placeholder="Enter full name"
+                                    style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="edit_user_role">Role *</label>
+                                <select id="edit_user_role" 
+                                        required 
+                                        style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px; background: white;">
+                                    <option value="Staff">Staff</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Student">Student</option>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Visitor">Visitor</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="edit_user_email">Email *</label>
+                                <input type="email" 
+                                    id="edit_user_email" 
+                                    required 
+                                    placeholder="user@example.com"
+                                    style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
+                                <small style="display: block; margin-top: 6px; color: #666; font-size: 12px;">
+                                    User will receive an email notification about any changes made
+                                </small>
+                            </div>
+                            
+                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div id="section-trusted-devices" class="section-hidden">
                     <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Trusted Devices</h3>
                     <div class="card">
@@ -505,6 +556,7 @@
 
                 <div id="section-security" class="section-hidden">
                     <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Security Dashboard</h3>
+                    
                     <div class="card">
                         <p class="subtitle" style="margin-top: 0; margin-bottom: 16px; text-align: right;">Monitor security events and settings</p>
                         <div class="info-box">
@@ -512,24 +564,24 @@
                                 <strong>Security Status:</strong> All systems operational<br>
                             </p>
                         </div>
-                        
-                        <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Recent Security Events</h3>
-                        <div class="card" style="margin-top: 0;">
-                            <div class="card-actions">
-                                <button class="btn btn-secondary" onclick="refreshSecurityLogs()">Refresh</button>
+                    </div>
+                    
+                    <h3 style="margin: 24px 0 16px 0; font-size: 18px; font-weight: 600;">Recent Security Events</h3>
+                    <div class="card" style="margin-top: 0;">
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="refreshSecurityLogs()">Refresh</button>
+                        </div>
+                        <div class="security-audit-log" id="securityAuditLog">
+                            {% for event in security_events %}
+                            <div class="audit-entry">
+                                <div class="audit-time">{{ event.timestamp }}</div>
+                                <div class="audit-action">{{ event.action }}</div>
+                                <div class="audit-user">{{ event.user }}</div>
+                                <div class="audit-details">{{ event.details }}</div>
                             </div>
-                            <div class="security-audit-log" id="securityAuditLog">
-                                {% for event in security_events %}
-                                <div class="audit-entry">
-                                    <div class="audit-time">{{ event.timestamp }}</div>
-                                    <div class="audit-action">{{ event.action }}</div>
-                                    <div class="audit-user">{{ event.user }}</div>
-                                    <div class="audit-details">{{ event.details }}</div>
-                                </div>
-                                {% else %}
-                                <div class="empty-state">No security events to display</div>
-                                {% endfor %}
-                            </div>
+                            {% else %}
+                            <div class="empty-state">No security events to display</div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -888,58 +940,6 @@
                 <button class="btn btn-primary" onclick="extendSession()">Extend Session</button>
                 <button class="btn btn-secondary" onclick="logoutUser()">Logout</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Edit User Modal -->
-    <div id="editUserModal" class="section-hidden">
-        <div class="overlay" onclick="closeEditModal()"></div>
-        <div class="session-timeout-warning" style="max-width: 500px;">
-            <h3 id="editUserModalTitle">Edit User</h3>
-            <form id="editUserForm" style="text-align: left; margin-top: 20px;">
-                <div class="form-group">
-                    <label for="edit_user_name">Full Name *</label>
-                    <input type="text" 
-                        id="edit_user_name" 
-                        required 
-                        placeholder="Enter full name"
-                        style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit_user_role">Role *</label>
-                    <select id="edit_user_role" 
-                            required 
-                            style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px; background: white;">
-                        <option value="Staff">Staff</option>
-                        <option value="Employee">Employee</option>
-                        <option value="Student">Student</option>
-                        <option value="Teacher">Teacher</option>
-                        <option value="Visitor">Visitor</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit_user_email">Email *</label>
-                    <input type="email" 
-                        id="edit_user_email" 
-                        required 
-                        placeholder="user@example.com"
-                        style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;">
-                    <small style="display: block; margin-top: 6px; color: #666; font-size: 12px;">
-                        User will receive an email notification about any changes made
-                    </small>
-                </div>
-                
-                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        Save Changes
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -1301,11 +1301,22 @@ def edit_user_route(user_id):
             
             # Update email if changed
             if 'email' in changes:
-                cur.execute("""
-                    UPDATE user_emails 
-                    SET email = ? 
-                    WHERE user_id = ?
-                """, (new_email, user_id))
+                # Check if user has an email record
+                cur.execute("SELECT COUNT(*) FROM user_emails WHERE user_id = ?", (user_id,))
+                has_email = cur.fetchone()[0] > 0
+                
+                if has_email:
+                    cur.execute("""
+                        UPDATE user_emails 
+                        SET email = ? 
+                        WHERE user_id = ?
+                    """, (new_email, user_id))
+                else:
+                    # Insert new email record
+                    cur.execute("""
+                        INSERT INTO user_emails (user_id, email, email_verified)
+                        VALUES (?, ?, 0)
+                    """, (user_id, new_email))
             
             conn.commit()
         finally:
@@ -1329,6 +1340,17 @@ def edit_user_route(user_id):
                     'error': str(e),
                     'user_id': user_id
                 })
+        
+        # ✅ NEW: Send real-time SSE notification to user
+        try:
+            from routes_sse import notify_user_profile_changed
+            notify_user_profile_changed(user_id, {
+                'name': new_name,
+                'role': new_role,
+                'email': new_email
+            })
+        except Exception as e:
+            print(f"[Admin] Failed to send SSE notification: {e}")
         
         # Log the update
         log_suspicious_activity('user_profile_updated', {
