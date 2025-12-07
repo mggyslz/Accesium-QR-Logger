@@ -568,7 +568,10 @@ def get_notifications():
 @user_login_required
 def mark_notification_read_route(notification_id):
     """Mark notification as read"""
-    if notification_id <= 0:
+    try:
+        if notification_id <= 0:
+            raise ValueError("Invalid notification ID")
+    except (ValueError, TypeError):
         return jsonify({"status": "error", "message": "Invalid notification ID"}), 400
 
     try:
@@ -777,7 +780,11 @@ def profile():
 @user_login_required
 def remove_device(device_id):
     """Remove a trusted device"""
-    if device_id <= 0:
+    # ✅ FIX: Better validation
+    try:
+        if device_id <= 0:
+            raise ValueError("Invalid device ID")
+    except (ValueError, TypeError):
         return jsonify({"status": "error", "message": "Invalid device ID"}), 400
 
     try:

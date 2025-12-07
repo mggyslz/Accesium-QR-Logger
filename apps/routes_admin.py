@@ -148,6 +148,12 @@ def set_location():
 @admin_login_required 
 def delete_user_route(user_id):
     try:
+        if user_id <= 0:
+            raise ValueError("Invalid user ID")
+    except (ValueError, TypeError):
+        return jsonify({"status": "error", "message": "Invalid user ID"}), 400
+    
+    try:
         delete_user(user_id)
         return jsonify({"status": "success", "message": "User deleted"})
     except Exception as e:
@@ -735,14 +741,17 @@ def search_users():
     """Search and filter users for access rules"""
     try:
         search_query = sanitize_input(request.args.get('search', ''), 100).lower()
-        roles_filter = request.args.getlist('roles[]')  
+        roles_filter = request.args.getlist('roles[]')
+        
+        VALID_ROLES = ['Staff', 'Employee', 'Student', 'Teacher', 'Visitor']
+        if roles_filter:
+            roles_filter = [r for r in roles_filter if r in VALID_ROLES]
         
         conn = get_conn()
         cur = conn.cursor()
         
         query = "SELECT user_id, username, name, role, email FROM users WHERE 1=1"
         params = []
-        
         
         if search_query:
             query += """ AND (
@@ -753,7 +762,6 @@ def search_users():
             )"""
             search_param = f'%{search_query}%'
             params.extend([search_param, search_param, search_param, search_param])
-        
         
         if roles_filter:
             placeholders = ','.join('?' * len(roles_filter))
@@ -802,13 +810,22 @@ def bulk_add_access_rules():
         
         if not user_ids:
             return jsonify({"status": "error", "message": "No users selected"}), 400
+        
+        try:
+            user_ids = [int(uid) for uid in user_ids if uid]
+            if not user_ids:
+                return jsonify({"status": "error", "message": "No valid user IDs"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "Invalid user ID format"}), 400
+        
         if rule_type not in ['whitelist', 'blacklist']:
             return jsonify({"status": "error", "message": "Invalid rule type"}), 400
+        
         added_count = 0
         for user_id in user_ids:
             try:
                 add_access_rule(
-                    int(user_id), rule_type, location, time_from, time_to,
+                    user_id, rule_type, location, time_from, time_to,
                     date_from, date_to, specific_dates
                 )
                 added_count += 1
@@ -974,16 +991,16 @@ def reset_user_password():
         from core.security import generate_salt, hash_pin
         from core.notification_utils import notify_password_changed
         
-        
         user_id = request.form.get('user_id')
         if not user_id:
             return jsonify({"status": "error", "message": "User ID is required"}), 400
         
         try:
             user_id = int(user_id)
+            if user_id <= 0:
+                raise ValueError("Invalid user ID")
         except (ValueError, TypeError):
             return jsonify({"status": "error", "message": "Invalid user ID"}), 400
-        
         
         if not is_smtp_configured():
             return jsonify({
@@ -991,14 +1008,11 @@ def reset_user_password():
                 "message": "Email service not configured. Cannot send password reset."
             }), 500
         
-        
         user = get_user_by_id(user_id)
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
         
-        
         user_id_db, username, name, role, qr_code, qr_token, status = user
-        
         
         user_email = get_user_email(user_id)
         if not user_email:
@@ -1006,9 +1020,11 @@ def reset_user_password():
                 "status": "error",
                 "message": "User does not have an email address registered. Cannot send password reset."
             }), 400
+        
         temporary_password = generate_temporary_password()
         password_salt = generate_salt()
         password_hash = hash_pin(temporary_password, password_salt)
+        
         conn = get_conn()
         try:
             cur = conn.cursor()
@@ -1020,6 +1036,7 @@ def reset_user_password():
             conn.commit()
         finally:
             conn.close()
+        
         login_url = url_for('user.login_page', _external=True)
         email_sent = send_password_reset_by_admin_email(
             email=user_email,
@@ -1027,8 +1044,8 @@ def reset_user_password():
             temporary_password=temporary_password,
             login_url=login_url
         )
+        
         if not email_sent:
-            
             conn = get_conn()
             try:
                 cur = conn.cursor()
@@ -1045,7 +1062,9 @@ def reset_user_password():
                 "status": "error",
                 "message": "Failed to send password reset email. Password was not changed."
             }), 500
-        notify_password_changed('user', user_id)   
+        
+        notify_password_changed('user', user_id)
+        
         log_suspicious_activity('admin_reset_user_password', {
             'admin_id': session['admin_id'],
             'admin_username': session.get('admin_username'),
@@ -1053,6 +1072,7 @@ def reset_user_password():
             'target_username': username,
             'target_email': user_email
         })
+        
         return jsonify({
             "status": "success",
             "message": f"Password reset successful. A temporary password has been sent to {user_email}."
@@ -1068,6 +1088,7 @@ def reset_user_password():
             "status": "error",
             "message": "Failed to reset password. Please try again."
         }), 500
+
         
 @admin_bp.route('/add-admin', methods=['POST'])
 @csrf_protect
@@ -1189,6 +1210,12 @@ def delete_admin_route(admin_id):
         return jsonify({"status": "error", "message": "Not authorized"}), 401
     
     from core.database import is_first_admin, delete_admin
+    
+    try:
+        if admin_id <= 0:
+            raise ValueError("Invalid admin ID")
+    except (ValueError, TypeError):
+        return jsonify({"status": "error", "message": "Invalid admin ID"}), 400
 
     if not is_first_admin(session['admin_id']):
         log_suspicious_activity('unauthorized_admin_deletion', {
@@ -1246,9 +1273,14 @@ def edit_user_route(user_id):
         return jsonify({"status": "error", "message": "Not authorized"}), 401
     
     try:
+        if user_id <= 0:
+            raise ValueError("Invalid user ID")
+    except (ValueError, TypeError):
+        return jsonify({"status": "error", "message": "Invalid user ID"}), 400
+    
+    try:
         from core.database import get_user_by_id, get_user_email
         
-        # Get current user data
         user = get_user_by_id(user_id)
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
@@ -1256,12 +1288,10 @@ def edit_user_route(user_id):
         user_id_db, username, old_name, old_role, qr_code, qr_token, status = user
         old_email = get_user_email(user_id)
         
-        # Get new data from form
         new_email = sanitize_input(request.form.get('email', ''), MAX_EMAIL_LENGTH).lower()
         new_name = sanitize_input(request.form.get('name', ''), MAX_NAME_LENGTH)
         new_role = sanitize_input(request.form.get('role', ''), 50)
         
-        # Validation
         if not new_email or not new_name or not new_role:
             return jsonify({"status": "error", "message": "All fields are required"}), 400
         
@@ -1271,10 +1301,11 @@ def edit_user_route(user_id):
         if new_name.strip() == '':
             return jsonify({"status": "error", "message": "Name cannot be empty"}), 400
         
-        if new_role not in ['Staff', 'Employee', 'Student', 'Teacher', 'Visitor']:
+        # ✅ FIX: Whitelist valid roles
+        VALID_ROLES = ['Staff', 'Employee', 'Student', 'Teacher', 'Visitor']
+        if new_role not in VALID_ROLES:
             return jsonify({"status": "error", "message": "Invalid role"}), 400
         
-        # Track what changed
         changes = {}
         if old_email != new_email:
             changes['email'] = {'old': old_email or 'No email', 'new': new_email}
@@ -1283,25 +1314,20 @@ def edit_user_route(user_id):
         if old_role != new_role:
             changes['role'] = {'old': old_role, 'new': new_role}
         
-        # If nothing changed
         if not changes:
             return jsonify({"status": "info", "message": "No changes detected"}), 200
         
-        # Update database
         conn = get_conn()
         try:
             cur = conn.cursor()
             
-            # Update user details
             cur.execute("""
                 UPDATE users 
                 SET name = ?, role = ?
                 WHERE user_id = ?
             """, (new_name, new_role, user_id))
             
-            # Update email if changed
             if 'email' in changes:
-                # Check if user has an email record
                 cur.execute("SELECT COUNT(*) FROM user_emails WHERE user_id = ?", (user_id,))
                 has_email = cur.fetchone()[0] > 0
                 
@@ -1312,7 +1338,6 @@ def edit_user_route(user_id):
                         WHERE user_id = ?
                     """, (new_email, user_id))
                 else:
-                    # Insert new email record
                     cur.execute("""
                         INSERT INTO user_emails (user_id, email, email_verified)
                         VALUES (?, ?, 0)
@@ -1322,7 +1347,6 @@ def edit_user_route(user_id):
         finally:
             conn.close()
         
-        # Send notification email
         from core.email_utils import send_user_profile_updated_email, is_smtp_configured
         
         email_sent = False
@@ -1355,9 +1379,7 @@ def edit_user_route(user_id):
             print(f"[Admin] ⚠️ SSE function not found: {ae}")
         except Exception as e:
             print(f"[Admin] ⚠️ Failed to send SSE notification: {e}")
-
         
-        # Log the update
         log_suspicious_activity('user_profile_updated', {
             'admin_id': session['admin_id'],
             'admin_username': session.get('admin_username'),
@@ -1367,7 +1389,6 @@ def edit_user_route(user_id):
             'email_sent': email_sent
         })
         
-        # Build response message
         change_summary = []
         for field, vals in changes.items():
             change_summary.append(f"{field.capitalize()}: {vals['old']} → {vals['new']}")
