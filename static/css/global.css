@@ -712,6 +712,13 @@ body.dark-mode .stat-card:has(.icon-status):hover::before {
   background: var(--color-primary-dark);
 }
 
+.bulk-controls {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 20px;

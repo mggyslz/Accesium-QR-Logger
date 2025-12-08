@@ -1116,30 +1116,21 @@ openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 36
             </p>
             <div class="code-block">
               <pre>
-# Security Settings
-MAX_LOGIN_ATTEMPTS = 5
-LOCKOUT_TIME = 900  # 15 minutes in seconds
-SESSION_TIMEOUT = 3600  # 1 hour in seconds
-CSRF_TOKEN_EXPIRY = 3600  # 1 hour in seconds
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-# QR Code Settings
-QR_TOKEN_LENGTH = 32
-QR_CODE_SIZE = 10
-QR_CODE_BOX_SIZE = 10
-QR_CODE_BORDER = 4
+DB_PATH = PROJECT_ROOT / "data" / "security_app.db"
+QRCODE_DIR = PROJECT_ROOT / "static" / "qrcodes"
+EXPORT_DIR = PROJECT_ROOT / "data" / "exports"
 
-# Verification Settings
-VERIFICATION_CODE_LENGTH = 6
-VERIFICATION_CODE_EXPIRY = 600  # 10 minutes in seconds
-TRUSTED_DEVICE_EXPIRY_DAYS = 30
+# Camera index (0 is default built-in webcam)
+CAMERA_INDEX = 0
 
-# Email Settings
-EMAIL_VERIFICATION_REQUIRED = True
-LOGIN_NOTIFICATIONS = True
+# Security parameters for PBKDF2
+PBKDF2_ITERATIONS = 150_000
+PBKDF2_ALGO = "sha256"
+SALT_BYTES = 16
 
-# Access Control Settings
-DEFAULT_LOCATION = "Gate"
-MAX_PIN_ATTEMPTS = 3
 </pre
               >
             </div>
@@ -1179,17 +1170,10 @@ def hash_password(password, salt=None):
     """Generate SHA-256 password hash with salt"""
     pass
 
-def verify_password(password, password_hash, salt):
-    """Verify password against stored hash"""
-    pass
-
 def generate_pin():
     """Generate random 6-digit PIN"""
     pass
 
-def verify_pin(input_pin, stored_pin):
-    """Verify PIN with timing attack protection"""
-    pass
 
 def generate_salt():
     """Generate cryptographically secure random salt"""
