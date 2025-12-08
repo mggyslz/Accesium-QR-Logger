@@ -24,7 +24,7 @@ COPY . .
 RUN mkdir -p data static/qrcodes static/exports
 
 # Initialize the database
-RUN python init_db.py
+RUN python core/init_db.py
 
 # Expose port
 EXPOSE 5000
