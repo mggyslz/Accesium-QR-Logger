@@ -17,27 +17,28 @@ from apps.routes_user import user_bp
 try:
     from apps.routes_sse import sse_bp
 except ImportError:
-    try:
-        from apps.routes_sse import sse_bp
-    except ImportError:
-        print("WARNING: routes_sse.py not found. SSE functionality will not work.")
-        sse_bp = None
+    print("WARNING: routes_sse.py not found. SSE functionality will not work.")
+    sse_bp = None
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 if not app.secret_key:
     raise RuntimeError("SECRET_KEY is missing. Set it in your .env file.")
 
-# ---- Rate Limiter ----
+# ---- Production-Ready Rate Limiter ----
+# Automatically uses Redis if REDIS_URL is set (Railway provides this)
+# Falls back to memory storage for local development
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://",
+    default_limits=[],  # Use specific blueprint limits only
+    storage_uri=os.environ.get('REDIS_URL', 'memory://'),
+    headers_enabled=True,  # Adds X-RateLimit-* headers to responses
+    strategy="fixed-window",  # Can also use "moving-window" for more accuracy
 )
 
 # ---- Session Config ----
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('ENVIRONMENT') == 'production'  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800
@@ -60,10 +61,6 @@ def inject_csrf_helpers():
     return dict(csrf_token=generate_csrf,
                 inject_csrf_meta_tag=inject_csrf_meta_tag,
                 inject_csrf_input=inject_csrf_input)
-
-# -------------------------
-# HTTPS FORCE REMOVED HERE
-# -------------------------
 
 @app.after_request
 def set_security_headers(response):
@@ -133,17 +130,38 @@ app.register_blueprint(user_bp, url_prefix="/user")
 if sse_bp:
     app.register_blueprint(sse_bp, url_prefix="/sse")
 
-# ---- Rate Limits ----
-limiter.limit("100 per minute")(admin_bp)
-limiter.limit("150 per minute")(user_bp)
-limiter.limit("30 per minute")(auth_bp)
-limiter.limit("200 per minute")(scanner_bp)
+# ---- Blueprint-Level Rate Limits ----
+# These apply to ALL routes in each blueprint
 
+# Auth routes - STRICT limits to prevent brute force attacks
+limiter.limit("10 per minute")(auth_bp)
+
+# Admin routes - Moderate limits for admin operations
+limiter.limit("100 per minute")(admin_bp)
+
+# User routes - Generous limits for regular users
+limiter.limit("150 per minute")(user_bp)
+
+# Scanner routes - High limits for QR scanning operations
+limiter.limit("300 per minute")(scanner_bp)
+
+# SSE routes - Exempt from rate limiting (real-time events)
 if sse_bp:
     limiter.exempt(sse_bp)
 
 @app.errorhandler(429)
 def rate_limit_handler(e):
+    """Enhanced rate limit handler with better logging"""
+    from core.validation import log_suspicious_activity, get_client_ip
+    
+    # Log the rate limit violation
+    log_suspicious_activity('rate_limit_exceeded', {
+        'ip': get_client_ip(),
+        'path': request.path,
+        'method': request.method,
+        'user_agent': request.headers.get('User-Agent', '')[:200]
+    })
+    
     if request.path.startswith(('/admin/', '/user/')) or request.blueprint in ['admin', 'user']:
         return render_template("rate_limit.html"), 429
 
@@ -151,7 +169,8 @@ def rate_limit_handler(e):
         return jsonify({
             'status': 'error',
             'message': 'Rate limit exceeded. Please slow down and try again later.',
-            'code': 429
+            'code': 429,
+            'retry_after': e.description if hasattr(e, 'description') else '60 seconds'
         }), 429
 
     return render_template("rate_limit.html"), 429
@@ -222,6 +241,3 @@ def unauthorized(e):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-# update docker rebuild it
